@@ -36,6 +36,72 @@
         .position-relative-custom {
             position: relative;
         }
+
+        /* Custom alert styles */
+        .alert {
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            border: 1px solid #f5c2c7;
+            color: #842029;
+        }
+
+        .alert-success {
+            background-color: #d1e7dd;
+            border: 1px solid #badbcc;
+            color: #0f5132;
+        }
+
+        .alert-warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffecb5;
+            color: #664d03;
+        }
+
+        .alert ion-icon {
+            font-size: 22px;
+            margin-right: 10px;
+        }
+
+        .alert-content {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btn-close {
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            opacity: 0.5;
+            cursor: pointer;
+            padding: 0;
+            margin-left: 10px;
+        }
+
+        .btn-close:hover {
+            opacity: 1;
+        }
     </style>
 </head>
 
@@ -51,17 +117,42 @@
                                 <p>Sign In to your admin account</p>
                             </div>
 
+                            <!-- Error Messages -->
                             @if ($errors->any())
                                 <div class="alert alert-danger alert-dismissible fade show">
-                                    {{ $errors->first() }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    <div class="alert-content">
+                                        <ion-icon name="alert-circle"></ion-icon>
+                                        <span>{{ $errors->first() }}</span>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert">
+                                        <ion-icon name="close"></ion-icon>
+                                    </button>
                                 </div>
                             @endif
 
+                            <!-- Success Messages -->
                             @if (session('success'))
                                 <div class="alert alert-success alert-dismissible fade show">
-                                    {{ session('success') }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    <div class="alert-content">
+                                        <ion-icon name="checkmark-circle"></ion-icon>
+                                        <span>{{ session('success') }}</span>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert">
+                                        <ion-icon name="close"></ion-icon>
+                                    </button>
+                                </div>
+                            @endif
+
+                            <!-- Warning Messages -->
+                            @if (session('warning'))
+                                <div class="alert alert-warning alert-dismissible fade show">
+                                    <div class="alert-content">
+                                        <ion-icon name="warning"></ion-icon>
+                                        <span>{{ session('warning') }}</span>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert">
+                                        <ion-icon name="close"></ion-icon>
+                                    </button>
                                 </div>
                             @endif
 
@@ -87,17 +178,24 @@
                                 @csrf
                                 <div class="col-12">
                                     <label for="inputEmail" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="inputEmail" name="email"
-                                        value="{{ old('email', $lastEmail ?? '') }}" required>
+                                    <input type="email" class="form-control @error('email') is-invalid @enderror"
+                                        id="inputEmail" name="email" value="{{ old('email', $lastEmail ?? '') }}"
+                                        required>
+                                    @error('email')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-12 position-relative-custom">
                                     <label for="inputPassword" class="form-label">Password</label>
-                                    <input type="password" class="form-control" id="inputPassword" name="password"
-                                        required>
+                                    <input type="password" class="form-control @error('password') is-invalid @enderror"
+                                        id="inputPassword" name="password" required>
                                     <span class="password-toggle" onclick="togglePassword()">
                                         <ion-icon name="eye-outline" id="toggleIcon"
                                             style="font-size: 20px;"></ion-icon>
                                     </span>
+                                    @error('password')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-12 col-lg-6">
                                     <div class="form-check form-switch">

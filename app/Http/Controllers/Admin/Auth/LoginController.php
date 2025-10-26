@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Validation\ValidationException;
+use App\Models\Admin;
 
 class LoginController extends Controller
 {
@@ -23,6 +24,23 @@ class LoginController extends Controller
             'email' => 'required|email',
             'password' => 'required',
         ]);
+
+        // Cek apakah user ada
+        $admin = Admin::where('email', $request->email)->first();
+
+        // Jika user tidak ditemukan
+        if (!$admin) {
+            throw ValidationException::withMessages([
+                'email' => ['Email tidak terdaftar.'],
+            ]);
+        }
+
+        // Cek apakah user status inactive
+        if ($admin->status === 'inactive') {
+            throw ValidationException::withMessages([
+                'email' => ['Akun Anda sedang tidak aktif. Silakan hubungi administrator.'],
+            ]);
+        }
 
         $credentials = $request->only('email', 'password');
         $remember = $request->filled('remember');

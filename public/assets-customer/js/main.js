@@ -1,324 +1,1010 @@
-/*
+(function ($) {
+	("use strict");
+	var windowOn = $(window);
 
-Template:  clothing- Responsive Multi-purpose HTML5 Template
-Template URI: http://bootexperts.com
-Description: This is html5 template
-Author: BootExperts
-Author URI: http://bootexperts.com
-Version: 1.0
+	/*======================================
+	Preloader activation
+	========================================*/
+	$(window).on("load", function (event) {
+		$("#preloader").delay(500).fadeOut(500);
+	});
 
-*/
-/*================================================
-[  Table of contents  ]
-================================================
-	01. jQuery MeanMenu
-	02. wow js active
-	03. scrollUp jquery active
-	04. slick carousel 
+	/*======================================
+	Mobile Menu Js
+	========================================*/
+	$("#mobile-menu").meanmenu({
+		meanMenuContainer: ".mobile-menu",
+		meanScreenWidth: "991",
+		meanExpand: ['<i class="fal fa-plus"></i>'],
+	});
 
- 
-======================================
-[ End table content ]
-======================================*/
+	$("#mobile-menu-2").meanmenu({
+		meanMenuContainer: ".mobile-menu-2",
+		meanScreenWidth: "4000",
+		meanExpand: ['<i class="fal fa-plus"></i>'],
+	});
 
+	/*======================================
+	Sidebar Toggle
+	========================================*/
+	$(".offcanvas__close,.offcanvas__overlay").on("click", function () {
+		$(".offcanvas__info").removeClass("info-open");
+		$(".offcanvas__overlay").removeClass("overlay-open");
+	});
+	$(".sidebar__toggle").on("click", function () {
+		$(".offcanvas__info").addClass("info-open");
+		$(".offcanvas__overlay").addClass("overlay-open");
+	});
 
-(function($) {
-    "use strict";
+	/*======================================
+	Body overlay Js
+	========================================*/
+	$(".body-overlay").on("click", function () {
+		$(".offcanvas__area").removeClass("offcanvas-opened");
+		$(".df-search-area").removeClass("opened");
+		$(".body-overlay").removeClass("opened");
+	});
 
-    /*-------------------------------------------
-    	01. jQuery MeanMenu
-    --------------------------------------------- */
-    jQuery('nav#dropdown').meanmenu();
+	/*======================================
+	Search Header Js
+	========================================*/
+	$(".search-toggle-open").on("click", function () {
+		$(".df-search-area").addClass("opened");
+		$(".body-overlay").addClass("opened");
+	});
+	$(".tp-search-close-btn").on("click", function () {
+		$(".df-search-area").removeClass("opened");
+		$(".body-overlay").removeClass("opened");
+	});
 
-	$('.mobile-menu-area').on('click', function(e){
-		if(e.target.className == 'meanmenu-reveal'){
-			$('.mean-nav ul').slideUp();
-			var meanExp = $('.mean-expand');
-			meanExp.removeClass('mean-clicked');
-			for(var i = 0; i<meanExp.length; i++){
-				meanExp[i].innerHTML = '+';
-			}
+	/*======================================
+	Sticky Header Js
+	========================================*/
+
+	$(window).scroll(function () {
+		if ($(this).scrollTop() > 250) {
+			$("#header-sticky").addClass("sticky");
+		} else {
+			$("#header-sticky").removeClass("sticky");
 		}
 	});
 
-
-	$('.mean-nav li a, .mean-expand').on('click', function(e){
-		var $this = $(this);
-		var targetAttr = e.target.getAttribute('href');
-		var targetNodeName = e.target.nodeName;
-		if(targetAttr === '#' || targetAttr === '' || e.target.classList.contains('mean-expand')){
-			$this.parent().siblings().children('ul').slideUp();
-			$this.parent().siblings().children('.mean-expand').removeClass('mean-clicked').text('+');
-		}
-	})
-
-
-    /*-------------------------------------------
-    	02. wow js active
-    --------------------------------------------- */
-    new WOW().init();
-
-
-	/*--------------------------
-	 scrollUp
-	---------------------------- */	
-	$.scrollUp({
-        scrollText: "<i class='zmdi zmdi-arrow-merge'></i>",
-        easingType: 'linear',
-        scrollSpeed: 900,
-        animation: 'fade'
-    }); 
-
-	/*-------------------------------------------
-	04. slick carousel 
-	--------------------------------------------- */    
-	$('.new-arrival-slider-active').slick({
-	slidesToShow: 4,
-	slidesToScroll: 1,
-	autoplay: false,
-	autoplaySpeed: 5000,
-	dots: false,
-	arrows: true,
-	prevArrow: '<div class="arrow-left"><i class="zmdi zmdi-chevron-left"></i></div>',
-	nextArrow: '<div class="arrow-right"><i class="zmdi zmdi-chevron-right"></i></div>',
-	responsive: [
-	{  breakpoint: 1169,  settings: { slidesToShow: 4,  }  },
-	{  breakpoint: 969,   settings: { slidesToShow: 3,  }  },
-	{  breakpoint: 767,   settings: { slidesToShow: 2, }   },
-	{  breakpoint: 479,   settings: { slidesToShow: 1, }   },
-	]
-	});  
-	
-	$('.ctg-slider-active').slick({
-	slidesToShow: 1,
-	slidesToScroll: 1,
-	autoplay: false,
-	autoplaySpeed: 5000,
-	dots: false,
-	arrows: false,
-	prevArrow: '<div class="arrow-left"><i class="zmdi zmdi-chevron-left"></i></div>',
-	nextArrow: '<div class="arrow-right"><i class="zmdi zmdi-chevron-right"></i></div>',
-	responsive: [
-	{  breakpoint: 1169,  settings: { slidesToShow: 1,  }  },
-	{  breakpoint: 969,   settings: { slidesToShow: 1,  }  },
-	{  breakpoint: 767,   settings: { slidesToShow: 1, }   },
-	{  breakpoint: 479,   settings: { slidesToShow: 1, }   },
-	]
-	});
-	$('.total-rectnt-slider').slick({
-	slidesToShow: 1,
-	slidesToScroll: 1,
-	autoplay: false,
-	autoplaySpeed: 5000,
-	dots: false,
-	arrows: false,
-	responsive: [
-	{  breakpoint: 1169,  settings: { slidesToShow: 1,  }  },
-	{  breakpoint: 969,   settings: { slidesToShow: 1,  }  },
-	{  breakpoint: 767,   settings: { slidesToShow: 1, }   },
-	{  breakpoint: 479,   settings: { slidesToShow: 1, }   },
-	]
-	});
-	
-	$('.active-slider').slick({
-	slidesToShow: 1,
-	slidesToScroll: 1,
-	autoplay: false,
-	autoplaySpeed: 5000,
-	dots: true,
-	arrows: false,
-	responsive: [
-	{  breakpoint: 1169,  settings: { slidesToShow: 1,  }  },
-	{  breakpoint: 969,   settings: { slidesToShow: 1,  }  },
-	{  breakpoint: 767,   settings: { slidesToShow: 1, }   },
-	{  breakpoint: 479,   settings: { slidesToShow: 1, }   },
-	]
-	});
-	
-	$('.total-brand').slick({
-	slidesToShow: 6,
-	slidesToScroll: 1,
-	autoplay: false,
-	autoplaySpeed: 5000,
-	dots: false,
-	arrows: false,
-	responsive: [
-	{  breakpoint: 1200,  settings: { slidesToShow: 6,  }  },
-	{  breakpoint: 992,   settings: { slidesToShow: 5,  }  },
-	{  breakpoint: 768,   settings: { slidesToShow: 3, }   },
-	{  breakpoint: 480,   settings: { slidesToShow: 2, }   },
-	]
-	});
-	
-	$('.team-carasoul').slick({
-	slidesToShow: 4,
-	slidesToScroll: 1,
-	autoplay: false,
-	autoplaySpeed: 5000,
-	dots: false,
-	arrows: false,
-	responsive: [
-	{  breakpoint: 1169,  settings: { slidesToShow: 3,  }  },
-	{  breakpoint: 969,   settings: { slidesToShow: 3,  }  },
-	{  breakpoint: 767,   settings: { slidesToShow: 2, }   },
-	{  breakpoint: 479,   settings: { slidesToShow: 1, }   },
-	]
-	});
-    
-    $('.total-blog').slick({
-	slidesToShow: 3,
-	slidesToScroll: 1,
-	autoplay: false,
-	autoplaySpeed: 5000,
-	dots: false,
-	arrows: false,
-	responsive: [
-	{  breakpoint: 1169,  settings: { slidesToShow: 3,  }  },
-	{  breakpoint: 969,   settings: { slidesToShow: 2,  }  },
-	{  breakpoint: 767,   settings: { slidesToShow: 1, }   },
-	{  breakpoint: 479,   settings: { slidesToShow: 1, }   },
-	]
-	});
-	
-	$('.total-blog-2').slick({
-	slidesToShow: 2,
-	slidesToScroll: 1,
-	autoplay: false,
-	autoplaySpeed: 5000,
-	dots: false,
-	arrows: false,
-	responsive: [
-	{  breakpoint: 1169,  settings: { slidesToShow: 2,  }  },
-	{  breakpoint: 969,   settings: { slidesToShow: 2,  }  },
-	{  breakpoint: 767,   settings: { slidesToShow: 1, }   },
-	{  breakpoint: 479,   settings: { slidesToShow: 1, }   },
-	]
-	});
-	$('.total-blog-3').slick({
-	slidesToShow: 2,
-	slidesToScroll: 1,
-	autoplay: false,
-	autoplaySpeed: 5000,
-	dots: false,
-	arrows: false,
-	responsive: [
-	{  breakpoint: 1169,  settings: { slidesToShow: 2,  }  },
-	{  breakpoint: 969,   settings: { slidesToShow: 1,  }  },
-	{  breakpoint: 767,   settings: { slidesToShow: 1, }   },
-	{  breakpoint: 479,   settings: { slidesToShow: 1, }   },
-	]
-	});
-	
-    /*----------------------------
-     fancybox active
-    ------------------------------ */
-    $(document).ready(function() {
-        $('.fancybox').fancybox();
-    });
-
-	
-	/*----------------------------
-	 price-slider active
-	------------------------------ */  
-	  $( "#slider-range" ).slider({
-	   range: true,
-	   min: 40,
-	   max: 600,
-	   values: [ 40, 600 ],
-	   slide: function( event, ui ) {
-		$( "#amount" ).val( "$" + ui.values[ 0 ] + " - $" + ui.values[ 1 ] );
-	   }
-	  });
-	  $( "#amount" ).val( "$" + $( "#slider-range" ).slider( "values", 0 ) +
-	   " - $" + $( "#slider-range" ).slider( "values", 1 ) );
-	   
-    /*----------------------------
-    Countdown active
-    ------------------------------ */
-	$('[data-countdown]').countdown('2023/12/20', function(event) {
-        $(this).html(
-			event.strftime(
-				'<span class="cdown days"><span class="time-count">%-D</span> <p>Days</p></span><span class="cdown hour"><span class="time-count">%-H</span> <p>Hour</p></span><span class="cdown minutes"><span class="time-count">%M</span> <p>Min</p></span> <span class="cdown second"><span class="time-count">%S</span> <p>Sec</p></span>'
-			)
+	/*======================================
+	Data Css js
+	========================================*/
+	$("[data-background").each(function () {
+		$(this).css(
+			"background-image",
+			"url( " + $(this).attr("data-background") + "  )"
 		);
-    }); 
-	
-    
-    /*----------------------------
-	 active match height
-	------------------------------ */ 
-    $(function () {
-        $('.item').matchHeight();
-    });
-    
-    /*----------------------------
-	 treeview active
-	------------------------------ */  
-	$("#cat-treeview ul").treeview({
-		animated: "normal",
-		persist: "location",
-		collapsed: true,
-		unique: true,
 	});
 
-	/*----------------------------------------*/
-	/* FAQ Accordion
-	/*----------------------------------------*/
-	$('.card-header a').on('click', function() {
-		$('.card').removeClass('actives');
-		$(this).parents('.card').addClass('actives');
+	$("[data-width]").each(function () {
+		$(this).css("width", $(this).attr("data-width"));
 	});
-	
-	/*----------------------------
-     cart-plus-minus-button
-    ------------------------------ */
-    $(".cart-plus-minus")
-    $(".qtybutton").on("click", function() {
-        var $button = $(this);
-        var oldValue = $button.parent().find("input").val();
-        if ($button.text() == "+") {
-            var newVal = parseFloat(oldValue) + 1;
-        } else {
-            // Don't allow decrementing below zero
-            if (oldValue > 0) {
-                var newVal = parseFloat(oldValue) - 1;
-            } else {
-                newVal = 0;
-            }
-        }
-        $button.parent().find("input").val(newVal);
-    });
-	
-	
-	
-		$('.acc-toggle').on('click', function(){
-		if ($('.acc-toggle input').is(':checked')) {
-			$('.create-acc-body').slideDown();
-		}else{
-			$('.create-acc-body').slideUp();
-		}
-	});
-		
-	$('.ship-toggle').on('click', function(){
-		if ($('.ship-toggle input').is(':checked')) {
-			$('.ship-acc-body').slideDown();
-		}else{
-			$('.ship-acc-body').slideUp();
-		}
-	});
-		
-	
-	
 
+	$("[data-bg-color]").each(function () {
+		$(this).css("background-color", $(this).attr("data-bg-color"));
+	});
+
+	/*======================================
+	 Cart Quantity Js
+	========================================*/
+	$(".cart-minus").click(function () {
+		var $input = $(this).parent().find("input");
+		var count = parseInt($input.val()) - 1;
+		count = count < 1 ? 1 : count;
+		$input.val(count);
+		$input.change();
+		return false;
+	});
+
+	$(".cart-plus").click(function () {
+		var $input = $(this).parent().find("input");
+		$input.val(parseInt($input.val()) + 1);
+		$input.change();
+		return false;
+	});
+
+	/*======================================
+	MagnificPopup image view
+	========================================*/
+	$(".popup-image").magnificPopup({
+		type: "image",
+		gallery: {
+			enabled: true,
+		},
+	});
+
+	/*======================================
+	MagnificPopup video view
+	========================================*/
+	$(".popup-video").magnificPopup({
+		type: "iframe",
+	});
+
+	/*======================================
+	Counter Js
+	========================================*/
+	$(".counter").counterUp({
+		delay: 10,
+		time: 1000,
+	});
+
+	/*======================================
+	Wow Js
+	========================================*/
+	new WOW().init();
+
+	/*======================================
+	Back To Top Js
+	========================================*/
+	var progressPath = document.querySelector(".backtotop-wrap path");
+	var pathLength = progressPath.getTotalLength();
+	progressPath.style.transition = progressPath.style.WebkitTransition = "none";
+	progressPath.style.strokeDasharray = pathLength + " " + pathLength;
+	progressPath.style.strokeDashoffset = pathLength;
+	progressPath.getBoundingClientRect();
+	progressPath.style.transition = progressPath.style.WebkitTransition =
+		"stroke-dashoffset 10ms linear";
+	var updateProgress = function () {
+		var scroll = $(window).scrollTop();
+		var height = $(document).height() - $(window).height();
+		var progress = pathLength - (scroll * pathLength) / height;
+		progressPath.style.strokeDashoffset = progress;
+	};
+	updateProgress();
+	$(window).scroll(updateProgress);
+	var offset = 150;
+	var duration = 550;
+	jQuery(window).on("scroll", function () {
+		if (jQuery(this).scrollTop() > offset) {
+			jQuery(".backtotop-wrap").addClass("active-progress");
+		} else {
+			jQuery(".backtotop-wrap").removeClass("active-progress");
+		}
+	});
+	jQuery(".backtotop-wrap").on("click", function (event) {
+		event.preventDefault();
+		jQuery("html, body").animate({ scrollTop: 0 }, duration);
+		return false;
+	});
+
+	/*======================================
+	For language Js
+	========================================*/
+	if ($("#header-lang-toggle").length > 0) {
+		window.addEventListener("click", function (e) {
+			if (document.getElementById("header-lang-toggle").contains(e.target)) {
+				$(".header-lang ul").toggleClass("lang-list-open");
+			} else {
+				$(".header-lang ul").removeClass("lang-list-open");
+			}
+		});
+	}
+
+	/*======================================
+	For header header Js
+	========================================*/
+	if ($("#header-currency-toggle").length > 0) {
+		window.addEventListener("click", function (e) {
+			if (
+				document.getElementById("header-currency-toggle").contains(e.target)
+			) {
+				$(".tp-header-currency ul").toggleClass("tp-currency-list-open");
+			} else {
+				$(".tp-header-currency ul").removeClass("tp-currency-list-open");
+			}
+		});
+	}
+
+	/*======================================
+	For header setting Js
+	========================================*/
+	if ($("#header-setting-toggle").length > 0) {
+		window.addEventListener("click", function (e) {
+			if (
+				document.getElementById("header-setting-toggle").contains(e.target)
+			) {
+				$(".tp-header-setting ul").toggleClass("tp-setting-list-open");
+			} else {
+				$(".tp-header-setting ul").removeClass("tp-setting-list-open");
+			}
+		});
+	}
+
+	/*======================================
+	For before-after Js
+	========================================*/
+	if ($(".beforeAfter").length > 0) {
+		$(".beforeAfter").beforeAfter({
+			movable: true,
+			clickMove: true,
+			position: 50,
+			separatorColor: "#fafafa",
+			bulletColor: "#fafafa",
+			onMoveStart: function (e) {
+				console.log(event.target);
+			},
+			onMoving: function () {
+				console.log(event.target);
+			},
+			onMoveEnd: function () {
+				console.log(event.target);
+			},
+		});
+	}
+
+	/*======================================
+	Team slider Js
+	========================================*/
+	var team = new Swiper(".testimonial-active", {
+		slidesPerView: 2,
+		spaceBetween: 30,
+		loop: true,
+		roundLengths: true,
+		autoplay: {
+			delay: 3000,
+		},
+		navigation: {
+			nextEl: ".testimonial-button-next",
+			prevEl: ".testimonial-button-prev",
+		},
+		breakpoints: {
+			1400: {
+				slidesPerView: 3,
+			},
+			1200: {
+				slidesPerView: 1,
+			},
+			992: {
+				slidesPerView: 1,
+			},
+			768: {
+				slidesPerView: 1,
+			},
+			576: {
+				slidesPerView: 1,
+			},
+			0: {
+				slidesPerView: 1,
+			},
+		},
+	});
+
+	var team = new Swiper(".testimonial-active-2", {
+		slidesPerView: 1,
+		spaceBetween: 30,
+		loop: true,
+		roundLengths: true,
+		autoplay: {
+			delay: 3000,
+		},
+		navigation: {
+			nextEl: ".testimonial-button-next",
+			prevEl: ".testimonial-button-prev",
+		},
+		breakpoints: {
+			1400: {
+				slidesPerView: 1,
+			},
+			1200: {
+				slidesPerView: 1,
+			},
+			992: {
+				slidesPerView: 1,
+			},
+			768: {
+				slidesPerView: 1,
+			},
+			576: {
+				slidesPerView: 1,
+			},
+			0: {
+				slidesPerView: 1,
+			},
+		},
+	});
+
+	var team = new Swiper(".testimonial-active-3", {
+		slidesPerView: 3,
+		spaceBetween: 30,
+		loop: true,
+		roundLengths: true,
+		autoplay: {
+			delay: 3000,
+		},
+		pagination: {
+			el: ".bd-swiper-dot",
+			clickable: true,
+		},
+		navigation: {
+			nextEl: ".testimonial-button-next",
+			prevEl: ".testimonial-button-prev",
+		},
+		breakpoints: {
+			1400: {
+				slidesPerView: 3,
+			},
+			1200: {
+				slidesPerView: 3,
+			},
+			992: {
+				slidesPerView: 2,
+			},
+			768: {
+				slidesPerView: 2,
+			},
+			576: {
+				slidesPerView: 1,
+			},
+			0: {
+				slidesPerView: 1,
+			},
+		},
+	});
+
+	/*======================================
+	Review slider Js
+	========================================*/
+	var review = new Swiper(".review-active", {
+		slidesPerView: 2,
+		spaceBetween: 30,
+		loop: true,
+		roundLengths: true,
+		autoplay: {
+			delay: 3000,
+		},
+		navigation: {
+			nextEl: ".testimonial-button-next",
+			prevEl: ".testimonial-button-prev",
+		},
+		breakpoints: {
+			1400: {
+				slidesPerView: 2,
+			},
+			1200: {
+				slidesPerView: 1,
+			},
+			992: {
+				slidesPerView: 1,
+			},
+			768: {
+				slidesPerView: 1,
+			},
+			576: {
+				slidesPerView: 1,
+			},
+			0: {
+				slidesPerView: 1,
+			},
+		},
+	});
+
+	var review = new Swiper(".review-active", {
+		slidesPerView: 1,
+		spaceBetween: 30,
+		loop: true,
+		roundLengths: true,
+		observer: true,
+		observeParents: true,
+		autoplay: {
+			delay: 3000,
+		},
+		navigation: {
+			nextEl: ".review-button-prev",
+			prevEl: ".review-button-next",
+		},
+	});
+
+	$(".review-active-two").slick({
+		infinite: true,
+		vertical: true,
+		speed: 1000,
+		autoplaySpeed: 2000,
+		slidesToShow: 1,
+		autoplay: true,
+		arrows: true,
+		prevArrow:
+			'<button type="button" class="slick-prev"><i class="fa-regular fa-chevron-left"></i></button>',
+		nextArrow:
+			'<button type="button" class="slick-next"><i class="fa-regular fa-chevron-right"></i></button>',
+		appendArrows: $(".review-slider-navigation"),
+		slidesToShow: 1,
+		slidesToScroll: 1,
+		responsive: [
+			{
+				breakpoint: 1400,
+				slidesToShow: 1,
+			},
+			{
+				breakpoint: 1200,
+				slidesToShow: 1,
+			},
+			{
+				breakpoint: 992,
+				slidesToShow: 1,
+			},
+			{
+				breakpoint: 768,
+				settings: {
+					slidesToShow: 1,
+				},
+			},
+			{
+				breakpoint: 480,
+				settings: {
+					centerMode: false,
+					slidesToShow: 1,
+				},
+			},
+		],
+	});
+
+	/*======================================
+	product slider Js
+	========================================*/
+	var product = new Swiper(".product-active", {
+		slidesPerView: 4,
+		spaceBetween: 15,
+		loop: true,
+		roundLengths: true,
+		autoplay: {
+			delay: 3000,
+		},
+		pagination: {
+			el: ".bd-swiper-dot",
+			clickable: true,
+		},
+		breakpoints: {
+			1200: {
+				slidesPerView: 4,
+			},
+			992: {
+				slidesPerView: 3,
+			},
+			768: {
+				slidesPerView: 3,
+			},
+			576: {
+				slidesPerView: 2,
+			},
+			0: {
+				slidesPerView: 1,
+			},
+		},
+	});
+
+	var product = new Swiper(".furuniture-active", {
+		slidesPerView: 4,
+		spaceBetween: 15,
+		loop: true,
+		roundLengths: true,
+		autoplay: {
+			delay: 3000,
+		},
+		pagination: {
+			el: ".bd-swiper-dot",
+			clickable: true,
+		},
+		navigation: {
+			nextEl: ".discount-slider-button-prev",
+			prevEl: ".discount-slider-button-next",
+		},
+		breakpoints: {
+			1200: {
+				slidesPerView: 4,
+			},
+			992: {
+				slidesPerView: 3,
+			},
+			768: {
+				slidesPerView: 3,
+			},
+			576: {
+				slidesPerView: 2,
+			},
+			0: {
+				slidesPerView: 1,
+			},
+		},
+	});
+
+	var product = new Swiper(".f-category-active", {
+		slidesPerView: 5,
+		spaceBetween: 15,
+		loop: true,
+		roundLengths: true,
+		autoplay: {
+			delay: 3000,
+		},
+		pagination: {
+			el: ".bd-swiper-dot",
+			clickable: true,
+		},
+		navigation: {
+			nextEl: ".discount-slider-button-prev",
+			prevEl: ".discount-slider-button-next",
+		},
+		breakpoints: {
+			1200: {
+				slidesPerView: 5,
+			},
+			992: {
+				slidesPerView: 3,
+			},
+			768: {
+				slidesPerView: 3,
+			},
+			576: {
+				slidesPerView: 2,
+			},
+			0: {
+				slidesPerView: 1,
+			},
+		},
+	});
+
+	var productTwo = new Swiper(".discount-active", {
+		slidesPerView: 5,
+		spaceBetween: 15,
+		loop: true,
+		roundLengths: true,
+		observer: true,
+		observeParents: true,
+		autoplay: {
+			delay: 3000,
+		},
+		pagination: {
+			el: ".bd-swiper-dot",
+			clickable: true,
+		},
+		navigation: {
+			nextEl: ".discount-slider-button-prev",
+			prevEl: ".discount-slider-button-next",
+		},
+		breakpoints: {
+			1400: {
+				slidesPerView: 5,
+			},
+			1200: {
+				slidesPerView: 4,
+			},
+			992: {
+				slidesPerView: 4,
+			},
+			768: {
+				slidesPerView: 3,
+			},
+			576: {
+				slidesPerView: 2,
+			},
+			0: {
+				slidesPerView: 1,
+			},
+		},
+	});
+
+	/*======================================
+	brand slider Js
+	========================================*/
+	var brand = new Swiper(".brand-active", {
+		slidesPerView: 5,
+		spaceBetween: 30,
+		loop: true,
+		autoplay: {
+			delay: 3000,
+		},
+		breakpoints: {
+			1400: {
+				slidesPerView: 5,
+			},
+			1200: {
+				slidesPerView: 4,
+			},
+			992: {
+				slidesPerView: 4,
+			},
+			768: {
+				slidesPerView: 3,
+			},
+			576: {
+				slidesPerView: 2,
+			},
+			0: {
+				slidesPerView: 1,
+			},
+		},
+	});
+
+	/*======================================
+	service slider Js
+	========================================*/
+	var service = new Swiper(".service-active-2", {
+		slidesPerView: 3,
+		spaceBetween: 30,
+		loop: true,
+		autoplay: {
+			delay: 3000,
+		},
+		pagination: {
+			el: ".bd-swiper-dot",
+			clickable: true,
+		},
+		breakpoints: {
+			1200: {
+				slidesPerView: 3,
+			},
+			992: {
+				slidesPerView: 3,
+			},
+			768: {
+				slidesPerView: 2,
+			},
+			576: {
+				slidesPerView: 1,
+			},
+			0: {
+				slidesPerView: 1,
+			},
+		},
+	});
+
+	var project = new Swiper(".project-active", {
+		slidesPerView: 3,
+		spaceBetween: 30,
+		loop: true,
+		autoplay: {
+			delay: 3000,
+		},
+		breakpoints: {
+			1200: {
+				slidesPerView: 3,
+			},
+			992: {
+				slidesPerView: 2,
+			},
+			768: {
+				slidesPerView: 2,
+			},
+			576: {
+				slidesPerView: 2,
+			},
+			0: {
+				slidesPerView: 1,
+			},
+		},
+	});
+
+	/*======================================
+	doctor slider Js
+	========================================*/
+	var doctor = new Swiper(".doctor-slider-active", {
+		slidesPerView: 3,
+		spaceBetween: 30,
+		loop: true,
+		autoplay: {
+			delay: 3000,
+		},
+		navigation: {
+			nextEl: ".doctor-slider-button-next",
+			prevEl: ".doctor-slider-button-prev",
+		},
+		pagination: {
+			el: ".bd-swiper-dot",
+			clickable: true,
+		},
+		breakpoints: {
+			1200: {
+				slidesPerView: 3,
+			},
+			992: {
+				slidesPerView: 2,
+			},
+			768: {
+				slidesPerView: 2,
+			},
+			576: {
+				slidesPerView: 1,
+			},
+			0: {
+				slidesPerView: 1,
+			},
+		},
+	});
+
+	/*======================================
+	slider slider Js
+	========================================*/
+	if (jQuery(".slider-active").length > 0) {
+		let sliderActive1 = ".slider-active";
+		let sliderInit1 = new Swiper(sliderActive1, {
+			// Optional parameters
+			slidesPerView: 1,
+			slidesPerColumn: 1,
+			paginationClickable: true,
+			fadeEffect: {
+				crossFade: true,
+			},
+			loop: true,
+			effect: "fade",
+			autoplay: {
+				delay: 5000,
+			},
+			navigation: {
+				nextEl: ".slider-button-prev",
+				prevEl: ".slider-button-next",
+			},
+			pagination: {
+				el: ".banner-dot-2",
+				clickable: true,
+			},
+			a11y: false,
+		});
+
+		function animated_swiper(selector, init) {
+			let animated = function animated() {
+				$(selector + " [data-animation]").each(function () {
+					let anim = $(this).data("animation");
+					let delay = $(this).data("delay");
+					let duration = $(this).data("duration");
+
+					$(this)
+						.removeClass("anim" + anim)
+						.addClass(anim + " animated")
+						.css({
+							webkitAnimationDelay: delay,
+							animationDelay: delay,
+							webkitAnimationDuration: duration,
+							animationDuration: duration,
+						})
+						.one(
+							"webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend",
+							function () {
+								$(this).removeClass(anim + " animated");
+							}
+						);
+				});
+			};
+			animated();
+			// Make animated when slide change
+			init.on("slideChange", function () {
+				$(sliderActive1 + " [data-animation]").removeClass("animated");
+			});
+			init.on("slideChange", animated);
+		}
+
+		animated_swiper(sliderActive1, sliderInit1);
+	}
+
+	if (jQuery(".banner-active").length > 0) {
+		let sliderActive1 = ".banner-active";
+		let sliderInit1 = new Swiper(sliderActive1, {
+			// Optional parameters
+			slidesPerView: 1,
+			slidesPerColumn: 1,
+			paginationClickable: true,
+			fadeEffect: {
+				crossFade: true,
+			},
+			loop: true,
+			effect: "fade",
+			autoplay: {
+				delay: 5000,
+			},
+			navigation: {
+				nextEl: ".slider__button-prev",
+				prevEl: ".slider__button-next",
+			},
+			pagination: {
+				el: ".banner-dot",
+				clickable: true,
+			},
+			a11y: false,
+		});
+
+		function animated_swiper(selector, init) {
+			let animated = function animated() {
+				$(selector + " [data-animation]").each(function () {
+					let anim = $(this).data("animation");
+					let delay = $(this).data("delay");
+					let duration = $(this).data("duration");
+
+					$(this)
+						.removeClass("anim" + anim)
+						.addClass(anim + " animated")
+						.css({
+							webkitAnimationDelay: delay,
+							animationDelay: delay,
+							webkitAnimationDuration: duration,
+							animationDuration: duration,
+						})
+						.one(
+							"webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend",
+							function () {
+								$(this).removeClass(anim + " animated");
+							}
+						);
+				});
+			};
+			animated();
+			// Make animated when slide change
+			init.on("slideChange", function () {
+				$(sliderActive1 + " [data-animation]").removeClass("animated");
+			});
+			init.on("slideChange", animated);
+		}
+
+		animated_swiper(sliderActive1, sliderInit1);
+	}
+
+	var team = new Swiper(".banner-active-grocery", {
+		slidesPerView: 1,
+		spaceBetween: 30,
+		loop: true,
+		roundLengths: true,
+		autoplay: {
+			delay: 3000,
+		},
+	});
+
+	/*======================================
+	Postbox slider Js
+	========================================*/
+	var postboxSlider = new Swiper(".postbox__slider", {
+		slidesPerView: 1,
+		spaceBetween: 0,
+		loop: true,
+		autoplay: {
+			delay: 3000,
+		},
+		// Navigation arrows
+		navigation: {
+			nextEl: ".postbox-slider-button-next",
+			prevEl: ".postbox-slider-button-prev",
+		},
+		breakpoints: {
+			1200: {
+				slidesPerView: 1,
+			},
+			992: {
+				slidesPerView: 1,
+			},
+			768: {
+				slidesPerView: 1,
+			},
+			576: {
+				slidesPerView: 1,
+			},
+			0: {
+				slidesPerView: 1,
+			},
+		},
+	});
+
+	/*======================================
+	whyChoose slider Js
+	========================================*/
+	var whyChoose = new Swiper(".why-choose-active", {
+		slidesPerView: 1,
+		spaceBetween: 0,
+		loop: true,
+		autoplay: {
+			delay: 3000,
+		},
+		pagination: {
+			el: ".bd-swiper-dot",
+			clickable: true,
+		},
+		breakpoints: {
+			1200: {
+				slidesPerView: 3,
+			},
+			992: {
+				slidesPerView: 3,
+			},
+			768: {
+				slidesPerView: 1,
+			},
+			576: {
+				slidesPerView: 1,
+			},
+			0: {
+				slidesPerView: 1,
+			},
+		},
+	});
+
+	// Coundawn area start here ***
+	var targetDate = new Date("2024-05-12 00:00:00").getTime();
+
+	var countdownInterval = setInterval(function () {
+		var currentDate = new Date().getTime();
+		var remainingTime = targetDate - currentDate;
+
+		if (remainingTime <= 0) {
+			clearInterval(countdownInterval);
+			// Display a message or perform any action when the countdown timer reaches zero
+			$("#countdown-container").text("Countdown has ended!");
+		} else {
+			var days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
+			var hours = Math.floor(
+				(remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+			);
+			var minutes = Math.floor(
+				(remainingTime % (1000 * 60 * 60)) / (1000 * 60)
+			);
+			var seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+
+			// Pad single-digit values with leading zeros
+			$("#day").text(days.toString().padStart(2, "0"));
+			$("#hour").text(hours.toString().padStart(2, "0"));
+			$("#min").text(minutes.toString().padStart(2, "0"));
+			$("#sec").text(seconds.toString().padStart(2, "0"));
+		}
+	}, 1000);
+	// Coundawn area end here ***
+
+	/*======================================
+	22. TEAM ACTIVE
+	========================================*/
+	$(document).on("mouseover", ".why-choose-item", function () {
+		$(".why-choose-item").removeClass("active");
+		$(this).addClass("active");
+	});
+
+	/*======================================
+	Countdown slider Js
+	========================================*/
+	if ($(".countdown-wrapper").length > 0) {
+		// Function to update the countdown timer
+		function updateCountdown() {
+			const second = 1000,
+				minute = second * 60,
+				hour = minute * 60,
+				day = hour * 24;
+
+			let today = new Date();
+			let dd = String(today.getDate()).padStart(2, "0");
+			let mm = String(today.getMonth() + 1).padStart(2, "0");
+			let yyyy = today.getFullYear();
+			let nextYear = yyyy + 1;
+			let dayMonth = "12/30/";
+			let birthday = dayMonth + yyyy;
+
+			today = mm + "/" + dd + "/" + yyyy;
+			if (today > birthday) {
+				birthday = dayMonth + nextYear;
+			}
+
+			const countDownDate = new Date(birthday).getTime();
+
+			const x = setInterval(function () {
+				const now = new Date().getTime();
+				const distance = countDownDate - now;
+
+				const days = Math.floor(distance / day);
+				const hours = Math.floor((distance % day) / hour);
+				const minutes = Math.floor((distance % hour) / minute);
+				const seconds = Math.floor((distance % minute) / second);
+
+				// Update the HTML elements
+				document.getElementById("days").innerText = days;
+				document.getElementById("hours").innerText = hours;
+				document.getElementById("minutes").innerText = minutes;
+				document.getElementById("seconds").innerText = seconds;
+
+				// Check if the countdown is over
+				if (distance < 0) {
+					clearInterval(x);
+					document.getElementById("headline").innerText =
+						"It's my birthday!";
+					document.getElementById("countdown").style.display = "none";
+				}
+			}, 1000); // Update every 1 second
+		}
+
+		// Call the updateCountdown function when the page loads
+		window.onload = updateCountdown;
+	}
 })(jQuery);
-
-	$(window).scroll(function() {
-	if ($(this).scrollTop() > 1){ 
-		$('#sticky-header').addClass("sticky");
-	  }
-	  else{
-		$('#sticky-header').removeClass("sticky");
-	  }
-});
-
-

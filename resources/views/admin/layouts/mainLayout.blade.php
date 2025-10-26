@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- loader -->
     <link href="{{ asset('assets/css/pace.min.css') }}" rel="stylesheet" />
@@ -61,6 +62,7 @@
     @include('admin.modals.logout')
     <!-- JS Files -->
     @include('admin.partials.scripts')
+    @stack('scripts')
 </body>
 
 </html>

@@ -3,31 +3,42 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\Master\TagController;
+use App\Http\Controllers\Customer\PaymentController;
 use App\Http\Controllers\Admin\Master\SizeController;
+use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\Users\AdminController;
+use App\Http\Controllers\Customer\CheckoutController;
+use App\Http\Controllers\Customer\WishlistController;
 use App\Http\Controllers\Admin\Master\ColorController;
 use App\Http\Controllers\Admin\Master\SlideController;
 use App\Http\Controllers\Admin\Master\BannerController;
+use App\Http\Controllers\Customer\ProductCustController;
 use App\Http\Controllers\Admin\Master\AudienceController;
 use App\Http\Controllers\Admin\Master\CategoryController;
 use App\Http\Controllers\Admin\Master\PromoCodeController;
 use App\Http\Controllers\Admin\Master\PromotionController;
+use App\Http\Controllers\Customer\Auth\RegisterController;
+use App\Http\Controllers\Customer\Auth\LoginCustController; // SUDAH BENAR
 
+// Home redirect ke customer home
 Route::get('/', function () {
     return view('customer.pages.home');
 })->name('home');
 
+// Redirect khusus ke admin login
 Route::get('/login-admin', function () {
     return redirect()->route('admin.login');
 });
 
+// ===== ADMIN ROUTES =====
 Route::prefix('admin')->name('admin.')->group(function () {
     // Auth
     Route::middleware('guest:admin')->group(function () {
-        Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-        Route::post('/login', [LoginController::class, 'login']);
+        Route::get('/login-admin', [LoginController::class, 'showLoginForm'])->name('login');
+        Route::post('/login-admin', [LoginController::class, 'login']);
         Route::post('/clear-last-login', [LoginController::class, 'clearLastLogin'])->name('clear.last.login');
     });
 
@@ -115,9 +126,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Transaksi - ADMIN & PETUGAS
         Route::middleware('role:admin,petugas')->group(function () {
-            Route::get('/transactions', function () {
-                return view('admin.pages.transactions');
-            })->name('transactions');
+            Route::prefix('transactions')->name('transactions.')->group(function () {
+                Route::get('/', [TransactionController::class, 'index'])->name('index');
+                // EXPORT HARUS DI ATAS {id} !!!
+                Route::get('transactions/export', [TransactionController::class, 'export'])->name('export');
+                Route::get('transactions/statistics', [TransactionController::class, 'statistics'])->name('statistics');
+
+                // Route dengan {id} harus DI BAWAH
+                Route::get('transactions/{id}', [TransactionController::class, 'show'])->name('show')->where('id', '[0-9]+');
+                Route::put('transactions/{id}/status', [TransactionController::class, 'updateStatus'])->name('updateStatus')->where('id', '[0-9]+');
+                Route::put('transactions/{id}/payment-status', [TransactionController::class, 'updatePaymentStatus'])->name('updatePaymentStatus')->where('id', '[0-9]+');
+                Route::put('transactions/{id}/resi', [TransactionController::class, 'updateResi'])->name('updateResi')->where('id', '[0-9]+');
+                Route::post('transactions/{id}/verify-payment', [TransactionController::class, 'verifyPayment'])->name('verifyPayment')->where('id', '[0-9]+');
+                Route::delete('transactions/{id}', [TransactionController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
+            });
         });
 
         // Chat & Feedback - ADMIN & PETUGAS
@@ -148,5 +170,76 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
         Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+    });
+});
+
+// ===== CUSTOMER ROUTES =====
+Route::name('customer.')->group(function () {
+
+    // Auth Routes (Guest Only)
+    Route::middleware('guest:customer')->group(function () {
+        Route::get('/login', [LoginCustController::class, 'showLoginForm'])->name('login');
+        Route::post('/login', [LoginCustController::class, 'login']);
+
+        Route::get('/register', [RegisterController::class, 'showRegisterForm'])->name('register');
+        Route::post('/register', [RegisterController::class, 'register']);
+    });
+
+    // Logout (Authenticated Only)
+    Route::post('/logout', [LoginCustController::class, 'logout'])->name('logout')->middleware('auth:customer');
+
+    // Public Pages
+    Route::get('/', function () {
+        return view('customer.pages.home');
+    })->name('home');
+
+    Route::get('/about', function () {
+        return view('customer.pages.about');
+    })->name('about');
+
+    // Customer Product Routes (Public)
+    Route::get('/products', [ProductCustController::class, 'index'])->name('products');
+    Route::get('/product/{id}', [ProductCustController::class, 'show'])->name('product.detail');
+
+    Route::get('/contact', function () {
+        return view('customer.pages.contact');
+    })->name('contact');
+
+    // Protected Routes (Require Login)
+    Route::middleware('auth:customer')->group(function () {
+        // Wishlist Routes
+        Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist');
+        Route::post('/wishlist', [WishlistController::class, 'store'])->name('wishlist.add');
+        Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy'])->name('wishlist.remove');
+
+        // Cart Routes
+        Route::get('/cart', [CartController::class, 'index'])->name('cart');
+        Route::post('/cart', [CartController::class, 'store'])->name('cart.add');
+        Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
+        Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.remove');
+
+        // Checkout Routes
+        Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+        Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+
+        // ✅ TAMBAH INI: Upload payment page (sebelum success)
+        Route::get('/payment/upload/{id}', [PaymentController::class, 'showUploadPage'])->name('payment.upload.page');
+        Route::post('/payment/upload/{id}', [PaymentController::class, 'uploadProof'])->name('payment.upload');
+
+        // Success page (cuma bisa akses kalau udah upload)
+        Route::get('/checkout/success/{id}', [CheckoutController::class, 'success'])->name('checkout.success');
+
+        // Profile & Orders
+        Route::get('/profile', function () {
+            return view('customer.pages.profile');
+        })->name('profile');
+
+        Route::get('/orders', function () {
+            return view('customer.pages.orders');
+        })->name('orders');
+
+        Route::get('/chat', function () {
+            return view('customer.pages.chat');
+        })->name('chat');
     });
 });

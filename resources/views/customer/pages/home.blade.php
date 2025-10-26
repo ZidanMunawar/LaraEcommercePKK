@@ -1,31 +1,25 @@
-@extends('customer.layouts.mainLayout')
+@extends('customer.layouts.app')
 
-@section('title', 'Home || Clothing')
+@section('title', 'Home - ZynHope Apparel')
 
 @section('content')
-    <!-- Slider -->
-    <div class="slider-area pos-rltv carosule-pagi cp-line">
-        <div class="active-slider">
-            <div class="single-slider pos-rltv">
-                <div class="slider-img"><img src="{{ asset('assets-customers/images/slider/slider01.jpg') }}" alt="">
-                </div>
-                <div class="slider-content pos-abs">
-                    <h4>Best Collection</h4>
-                    <h1 class="uppercase pos-rltv underline">exclusive Fashion 2025</h1>
-                    <a href="#" class="btn-def btn-white">Shop Now</a>
-                </div>
-            </div>
+    <!-- Hero Section Placeholder -->
+    <div class="hero-area"
+        style="min-height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
+        <div class="container text-center text-white">
+            <h1 class="display-3 mb-4">Welcome to ZynHope Apparel</h1>
+            <p class="lead mb-4">Your Fashion Destination</p>
+            <a href="{{ route('customer.products') }}" class="btn btn-light btn-lg">Shop Now</a>
         </div>
     </div>
 
-    <!-- Delivery Service -->
-    <div class="delivery-service-area ptb-30">
-        <div class="container">
-            <div class="row">
-                <!-- ... isi sesuai kebutuhan ... -->
+    <!-- Content Coming Soon -->
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-12 text-center">
+                <h2>🚧 Page Under Construction 🚧</h2>
+                <p class="lead">We're working hard to bring you an amazing shopping experience!</p>
             </div>
         </div>
     </div>
-
-    <!-- Lanjutkan dengan section lain seperti New Arrival, Banner, dll -->
 @endsection
