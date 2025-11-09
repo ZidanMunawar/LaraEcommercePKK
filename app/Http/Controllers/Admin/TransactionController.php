@@ -10,26 +10,32 @@ use App\Models\ShippingMethod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class TransactionController extends Controller
 {
+    /**
+     * Menampilkan halaman daftar transaksi
+     */
     public function index(Request $request)
     {
+        // Query transaksi dengan relasi
         $query = Transaksi::with(['customer', 'shippingMethod', 'details', 'approvedBy'])
             ->orderBy('created_at', 'desc');
 
-        // Filter by status
-        if ($request->has('status') && $request->status != '') {
+        // Filter status pesanan
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Filter by payment status
-        if ($request->has('payment_status') && $request->payment_status != '') {
+        // Filter status pembayaran
+        if ($request->filled('payment_status')) {
             $query->where('payment_status', $request->payment_status);
         }
 
-        // Search
-        if ($request->has('search') && $request->search != '') {
+        // Search (ID, nama, email, resi)
+        if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('id_transaksi', 'like', "%{$search}%")
@@ -42,12 +48,15 @@ class TransactionController extends Controller
             });
         }
 
-        $transactions = $query->paginate(20);
+        $transactions = $query->paginate(20)->withQueryString();
         $shippingMethods = ShippingMethod::where('is_active', 1)->get();
 
         return view('admin.pages.transactions', compact('transactions', 'shippingMethods'));
     }
 
+    /**
+     * Menampilkan detail transaksi (untuk modal)
+     */
     public function show($id)
     {
         try {
@@ -61,7 +70,7 @@ class TransactionController extends Controller
                 'paymentLogs'
             ])->findOrFail($id);
 
-            // Format data untuk modal
+            // Format data untuk frontend
             $data = [
                 'id_transaksi' => $transaction->id_transaksi,
                 'transaction_id' => $transaction->transaction_id,
@@ -79,7 +88,7 @@ class TransactionController extends Controller
                 'created_at' => $transaction->created_at,
                 'catatan' => $transaction->catatan,
 
-                // Customer info
+                // Info customer
                 'customer' => [
                     'id_customers' => $transaction->customer->id_customers ?? null,
                     'nama_lengkap' => $transaction->customer->nama_lengkap ?? '-',
@@ -87,7 +96,7 @@ class TransactionController extends Controller
                     'no_telp' => $transaction->customer->no_telp ?? '-',
                 ],
 
-                // Shipping info - dari tabel transaksi langsung
+                // Info pengiriman (dari tabel transaksi)
                 'shipping_name' => $transaction->shipping_name,
                 'shipping_phone' => $transaction->shipping_phone,
                 'shipping_address' => $transaction->shipping_address,
@@ -97,14 +106,21 @@ class TransactionController extends Controller
                 'shipping_province_name' => $transaction->shipping_province_name,
                 'shipping_postal_code' => $transaction->shipping_postal_code,
 
-                // Shipping method
+                // Metode pengiriman
                 'shipping_method' => [
                     'id' => $transaction->shippingMethod->id ?? null,
                     'name' => $transaction->shippingMethod->name ?? '-',
                 ],
 
-                // Order items
+                // Item pesanan - PERBAIKAN: Hitung diskon dengan benar
                 'details' => $transaction->details->map(function ($detail) {
+                    $harga = floatval($detail->harga);
+                    $qty = intval($detail->qty);
+                    $diskon = floatval($detail->diskon ?? 0);
+
+                    // Hitung subtotal dengan diskon yang benar
+                    $subtotal = ($harga * $qty) - $diskon;
+
                     return [
                         'id' => $detail->id_detail,
                         'product_name' => $detail->produk->name ?? '-',
@@ -112,15 +128,16 @@ class TransactionController extends Controller
                             ($detail->color ? ' | Color: ' . $detail->color->name : ''),
                         'size' => $detail->size ? ['id' => $detail->size->id, 'size' => $detail->size->size] : null,
                         'color' => $detail->color ? ['id' => $detail->color->id, 'name' => $detail->color->name] : null,
-                        'harga' => $detail->harga,
-                        'qty' => $detail->qty,
-                        'diskon' => $detail->diskon ?? 0,
-                        'subtotal' => ($detail->harga * $detail->qty) - ($detail->diskon ?? 0),
+                        'harga' => $harga,
+                        'qty' => $qty,
+                        'diskon' => $diskon,
+                        'subtotal' => $subtotal,
                     ];
                 })->toArray(),
 
-                // Approved by
+                // Disetujui oleh - TAMBAH INFO ADMIN YANG APPROVE
                 'approved_by_name' => $transaction->approvedBy->nama_lengkap ?? null,
+                'approved_by_role' => $transaction->approvedBy->role ?? null,
             ];
 
             return response()->json([
@@ -131,12 +148,15 @@ class TransactionController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Transaction not found',
+                'message' => 'Transaksi tidak ditemukan',
                 'error' => $e->getMessage()
             ], 404);
         }
     }
 
+    /**
+     * Update status pesanan - PERBAIKAN: AUTO RESTOCK ON CANCEL
+     */
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
@@ -144,43 +164,133 @@ class TransactionController extends Controller
         ]);
 
         try {
-            $transaction = Transaksi::findOrFail($id);
+            DB::beginTransaction();
 
-            // Only admin/owner can update
+            $transaction = Transaksi::with('details.produk')->findOrFail($id);
             $admin = Auth::guard('admin')->user();
-            if (!in_array($admin->role, ['admin', 'owner'])) {
+
+            // PERBAIKAN: Petugas juga boleh update status
+            if (!in_array($admin->role, ['admin', 'owner', 'petugas'])) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthorized action'
+                    'message' => 'Anda tidak memiliki akses untuk melakukan tindakan ini'
                 ], 403);
             }
 
             $oldStatus = $transaction->status;
-            $transaction->status = $request->status;
+            $newStatus = $request->status;
 
-            // Auto approve if processing
-            if ($request->status == 'processing' && !$transaction->approved_by) {
+            // ==========================================
+            // LOGIKA AUTO RESTOCK & UPDATE STOK
+            // ==========================================
+
+            // Jika status berubah dari SELAIN cancelled MENJADI cancelled
+            if ($oldStatus !== 'cancelled' && $newStatus === 'cancelled') {
+                // KEMBALIKAN STOK - Transaksi dibatalkan
+                $this->restockProducts($transaction);
+                $message = 'Status pesanan berhasil dibatalkan dan stok produk dikembalikan!';
+
+                // Tambah catatan pembatalan
+                $transaction->catatan = ($transaction->catatan ? $transaction->catatan . "\n\n" : '') .
+                    "Pesanan dibatalkan oleh " . $admin->nama_lengkap . " pada " . now()->format('d/m/Y H:i') .
+                    ". Stok produk telah dikembalikan.";
+            }
+            // Jika status berubah dari cancelled MENJADI SELAIN cancelled
+            elseif ($oldStatus === 'cancelled' && $newStatus !== 'cancelled') {
+                // KURANGI STOK LAGI - Transaksi diaktifkan kembali
+                $this->deductStock($transaction);
+                $message = 'Status pesanan berhasil diaktifkan dan stok produk dikurangi!';
+
+                // Tambah catatan aktivasi
+                $transaction->catatan = ($transaction->catatan ? $transaction->catatan . "\n\n" : '') .
+                    "Pesanan diaktifkan kembali oleh " . $admin->nama_lengkap . " pada " . now()->format('d/m/Y H:i') .
+                    ". Stok produk telah dikurangi.";
+            }
+            // Jika status berubah tapi bukan cancelled
+            else {
+                $message = 'Status pesanan berhasil diperbarui!';
+            }
+
+            $transaction->status = $newStatus;
+
+            // Auto approve jika status jadi "processing" dan belum ada yang approve
+            if ($newStatus == 'processing' && !$transaction->approved_by) {
                 $transaction->approved_by = $admin->id_admin;
+
+                // Tambah catatan approval
+                $transaction->catatan = ($transaction->catatan ? $transaction->catatan . "\n\n" : '') .
+                    "Pesanan disetujui oleh " . $admin->nama_lengkap . " pada " . now()->format('d/m/Y H:i');
             }
 
             $transaction->save();
 
-            // TODO: Send notification to customer
+            DB::commit();
+
+            // Log activity
+            \Log::info("Status transaksi {$transaction->id_transaksi} diubah dari {$oldStatus} ke {$newStatus} oleh {$admin->nama_lengkap}");
 
             return response()->json([
                 'success' => true,
-                'message' => 'Transaction status updated successfully',
+                'message' => $message,
                 'old_status' => $oldStatus,
-                'new_status' => $transaction->status
+                'new_status' => $transaction->status,
+                'approved_by' => $transaction->approvedBy->nama_lengkap ?? null
             ]);
+
         } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error update status transaksi: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update status: ' . $e->getMessage()
+                'message' => 'Gagal memperbarui status: ' . $e->getMessage()
             ], 500);
         }
     }
 
+    /**
+     * Kembalikan stok produk ketika transaksi dibatalkan
+     */
+    private function restockProducts($transaction)
+    {
+        foreach ($transaction->details as $detail) {
+            if ($detail->produk) {
+                $produk = $detail->produk;
+                $oldStock = $produk->quantity;
+                $produk->quantity += $detail->qty; // Tambah stok kembali
+                $produk->save();
+
+                \Log::info("Stok dikembalikan: Produk {$produk->name} ({$produk->id_produk}) dari {$oldStock} menjadi {$produk->quantity} (+{$detail->qty}) - Transaksi {$transaction->id_transaksi}");
+            }
+        }
+    }
+
+    /**
+     * Kurangi stok produk ketika transaksi diaktifkan kembali dari cancelled
+     */
+    private function deductStock($transaction)
+    {
+        foreach ($transaction->details as $detail) {
+            if ($detail->produk) {
+                $produk = $detail->produk;
+                $oldStock = $produk->quantity;
+
+                // Cek apakah stok cukup
+                if ($produk->quantity < $detail->qty) {
+                    throw new \Exception("Stok produk {$produk->name} tidak cukup. Stok tersedia: {$produk->quantity}, dibutuhkan: {$detail->qty}");
+                }
+
+                $produk->quantity -= $detail->qty; // Kurangi stok
+                $produk->save();
+
+                \Log::info("Stok dikurangi: Produk {$produk->name} ({$produk->id_produk}) dari {$oldStock} menjadi {$produk->quantity} (-{$detail->qty}) - Transaksi {$transaction->id_transaksi}");
+            }
+        }
+    }
+
+    /**
+     * Update status pembayaran - PERBAIKAN: AUTO RESTOCK ON FAILED/REFUNDED
+     */
     public function updatePaymentStatus(Request $request, $id)
     {
         $request->validate([
@@ -188,31 +298,105 @@ class TransactionController extends Controller
         ]);
 
         try {
-            $transaction = Transaksi::findOrFail($id);
+            DB::beginTransaction();
+
+            $transaction = Transaksi::with('details.produk')->findOrFail($id);
+            $admin = Auth::guard('admin')->user();
+
+            // PERBAIKAN: Petugas juga boleh update payment status
+            if (!in_array($admin->role, ['admin', 'owner', 'petugas'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses untuk melakukan tindakan ini'
+                ], 403);
+            }
 
             $oldPaymentStatus = $transaction->payment_status;
-            $transaction->payment_status = $request->payment_status;
+            $newPaymentStatus = $request->payment_status;
 
-            if ($request->payment_status == 'paid' && !$transaction->paid_at) {
+            // ==========================================
+            // LOGIKA AUTO RESTOCK BERDASARKAN PAYMENT STATUS
+            // ==========================================
+
+            // Jika payment status berubah menjadi failed/refunded dari status lain
+            if (
+                in_array($newPaymentStatus, ['failed', 'refunded']) &&
+                !in_array($oldPaymentStatus, ['failed', 'refunded'])
+            ) {
+
+                // Auto cancel transaksi dan kembalikan stok
+                $transaction->status = 'cancelled';
+                $this->restockProducts($transaction);
+
+                // Tambah catatan
+                $transaction->catatan = ($transaction->catatan ? $transaction->catatan . "\n\n" : '') .
+                    "Pembayaran diubah ke {$newPaymentStatus} oleh " . $admin->nama_lengkap . " pada " . now()->format('d/m/Y H:i') .
+                    ". Status pesanan otomatis dibatalkan dan stok dikembalikan.";
+
+                $message = 'Status pembayaran diubah ke ' . $newPaymentStatus . ' dan stok produk dikembalikan!';
+            }
+            // Jika payment status berubah dari failed/refunded menjadi paid
+            elseif (
+                in_array($oldPaymentStatus, ['failed', 'refunded']) &&
+                $newPaymentStatus === 'paid'
+            ) {
+
+                // Kurangi stok kembali
+                $this->deductStock($transaction);
+                $transaction->status = 'processing';
+
+                // Tambah catatan
+                $transaction->catatan = ($transaction->catatan ? $transaction->catatan . "\n\n" : '') .
+                    "Pembayaran disetujui oleh " . $admin->nama_lengkap . " pada " . now()->format('d/m/Y H:i') .
+                    ". Status pesanan diaktifkan dan stok dikurangi.";
+
+                $message = 'Status pembayaran berhasil diperbarui dan stok produk dikurangi!';
+            } else {
+                $message = 'Status pembayaran berhasil diperbarui!';
+
+                // Tambah catatan untuk perubahan biasa
+                if ($oldPaymentStatus !== $newPaymentStatus) {
+                    $transaction->catatan = ($transaction->catatan ? $transaction->catatan . "\n\n" : '') .
+                        "Status pembayaran diubah dari {$oldPaymentStatus} ke {$newPaymentStatus} oleh " . $admin->nama_lengkap . " pada " . now()->format('d/m/Y H:i');
+                }
+            }
+
+            $transaction->payment_status = $newPaymentStatus;
+
+            // Set waktu lunas
+            if ($newPaymentStatus == 'paid' && !$transaction->paid_at) {
                 $transaction->paid_at = now();
             }
 
             $transaction->save();
 
+            DB::commit();
+
+            // Log activity
+            \Log::info("Payment status transaksi {$transaction->id_transaksi} diubah dari {$oldPaymentStatus} ke {$newPaymentStatus} oleh {$admin->nama_lengkap}");
+
             return response()->json([
                 'success' => true,
-                'message' => 'Payment status updated successfully',
+                'message' => $message,
                 'old_status' => $oldPaymentStatus,
-                'new_status' => $transaction->payment_status
+                'new_status' => $transaction->payment_status,
+                'order_status' => $transaction->status
             ]);
+
         } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error update payment status: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update payment status: ' . $e->getMessage()
+                'message' => 'Gagal memperbarui status pembayaran: ' . $e->getMessage()
             ], 500);
         }
     }
 
+    /**
+     * Update nomor resi - PERBAIKAN: ALLOW PETUGAS
+     */
     public function updateResi(Request $request, $id)
     {
         $request->validate([
@@ -220,60 +404,94 @@ class TransactionController extends Controller
         ]);
 
         try {
+            DB::beginTransaction();
+
             $transaction = Transaksi::findOrFail($id);
+            $admin = Auth::guard('admin')->user();
+
+            // PERBAIKAN: Petugas juga boleh update resi
+            if (!in_array($admin->role, ['admin', 'owner', 'petugas'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses untuk melakukan tindakan ini'
+                ], 403);
+            }
+
+            $oldResi = $transaction->resi_number;
             $transaction->resi_number = $request->resi_number;
 
-            // Auto change status to shipped
+            // Auto change status ke "shipped" jika dari processing
             if ($transaction->status == 'processing') {
                 $transaction->status = 'shipped';
+
+                // Tambah catatan
+                $transaction->catatan = ($transaction->catatan ? $transaction->catatan . "\n\n" : '') .
+                    "Pesanan dikirim dengan resi: {$request->resi_number} oleh " . $admin->nama_lengkap . " pada " . now()->format('d/m/Y H:i');
+            } else {
+                // Tambah catatan update resi saja
+                $transaction->catatan = ($transaction->catatan ? $transaction->catatan . "\n\n" : '') .
+                    "No. resi diupdate dari '{$oldResi}' ke '{$request->resi_number}' oleh " . $admin->nama_lengkap . " pada " . now()->format('d/m/Y H:i');
             }
 
             $transaction->save();
 
-            // TODO: Send notification to customer with resi number
+            DB::commit();
+
+            // Log activity
+            \Log::info("Resi transaksi {$transaction->id_transaksi} diupdate: {$oldResi} -> {$request->resi_number} oleh {$admin->nama_lengkap}");
 
             return response()->json([
                 'success' => true,
-                'message' => 'Resi number updated successfully',
+                'message' => 'Nomor resi berhasil ditambahkan!',
                 'resi_number' => $transaction->resi_number,
                 'status' => $transaction->status
             ]);
+
         } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error update resi: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update resi: ' . $e->getMessage()
+                'message' => 'Gagal menambahkan resi: ' . $e->getMessage()
             ], 500);
         }
     }
 
+    /**
+     * Verifikasi pembayaran - PERBAIKAN: AUTO RESTOCK ON REJECT
+     */
     public function verifyPayment(Request $request, $id)
     {
         $request->validate([
             'action' => 'required|in:approve,reject',
-            'reject_reason' => 'nullable|string|max:255' // UBAH dari required_if jadi nullable
+            'reject_reason' => 'nullable|string|max:255'
         ]);
 
         try {
-            $transaction = Transaksi::with('details.produk')->findOrFail($id);
+            DB::beginTransaction();
 
-            // Only admin/owner can verify
+            $transaction = Transaksi::with('details.produk')->findOrFail($id);
             $admin = Auth::guard('admin')->user();
-            if (!in_array($admin->role, ['admin', 'owner'])) {
+
+            // PERBAIKAN: Petugas juga boleh verifikasi pembayaran
+            if (!in_array($admin->role, ['admin', 'owner', 'petugas'])) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthorized action'
+                    'message' => 'Anda tidak memiliki akses'
                 ], 403);
             }
 
-            // Check if payment proof exists
+            // Cek bukti pembayaran
             if (!$transaction->payment_proof) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'No payment proof uploaded yet'
+                    'message' => 'Belum ada bukti pembayaran yang diupload'
                 ], 400);
             }
 
             if ($request->action === 'approve') {
+                // APPROVE: Set paid + processing
                 $transaction->update([
                     'payment_status' => 'paid',
                     'paid_at' => now(),
@@ -281,78 +499,150 @@ class TransactionController extends Controller
                     'approved_by' => $admin->id_admin
                 ]);
 
-                $message = 'Payment approved successfully';
+                // Tambah catatan approval
+                $transaction->catatan = ($transaction->catatan ? $transaction->catatan . "\n\n" : '') .
+                    "Pembayaran disetujui oleh " . $admin->nama_lengkap . " pada " . now()->format('d/m/Y H:i');
+
+                $message = 'Pembayaran berhasil disetujui!';
+
             } else {
-                // Reject
-                $rejectReason = $request->reject_reason ?: 'No reason provided';
+                // REJECT: Set failed + cancelled + return stock
+                $rejectReason = $request->reject_reason ?: 'Tidak ada alasan';
+
+                // Kembalikan stok produk
+                $this->restockProducts($transaction);
 
                 $transaction->update([
                     'payment_status' => 'failed',
                     'status' => 'cancelled',
                     'catatan' => ($transaction->catatan ? $transaction->catatan . "\n\n" : '') .
-                        "Payment rejected: " . $rejectReason
+                        "Pembayaran ditolak oleh " . $admin->nama_lengkap . " pada " . now()->format('d/m/Y H:i') .
+                        ". Alasan: " . $rejectReason . " (Stok produk dikembalikan)"
                 ]);
 
-                // Return stock
-                foreach ($transaction->details as $detail) {
-                    if ($detail->produk) {
-                        $detail->produk->increment('quantity', $detail->qty);
-                    }
-                }
-
-                $message = 'Payment rejected and stock returned';
+                $message = 'Pembayaran ditolak dan stok produk dikembalikan';
             }
+
+            $transaction->save();
+
+            DB::commit();
+
+            // Log activity
+            \Log::info("Payment verification {$transaction->id_transaksi}: {$request->action} oleh {$admin->nama_lengkap}");
 
             return response()->json([
                 'success' => true,
                 'message' => $message,
                 'payment_status' => $transaction->payment_status,
-                'status' => $transaction->status
+                'status' => $transaction->status,
+                'approved_by' => $admin->nama_lengkap
             ]);
 
         } catch (\Exception $e) {
+            DB::rollBack();
             \Log::error('Payment verification error: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to process payment verification: ' . $e->getMessage()
+                'message' => 'Gagal memverifikasi pembayaran: ' . $e->getMessage()
             ], 500);
         }
     }
 
-
-    public function destroy($id)
+    /**
+     * Generate Invoice PDF
+     */
+    public function generateInvoice($id)
     {
         try {
-            $transaction = Transaksi::findOrFail($id);
+            $transaction = Transaksi::with([
+                'customer',
+                'shippingMethod',
+                'details.produk',
+                'details.size',
+                'details.color',
+                'approvedBy'
+            ])->findOrFail($id);
 
-            // Only allow delete if cancelled or very old pending
-            if (!in_array($transaction->status, ['cancelled'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Can only delete cancelled transactions'
-                ], 403);
-            }
+            // Format data untuk invoice
+            $invoiceData = [
+                'invoice_number' => $transaction->transaction_id ?? 'INV-' . str_pad($transaction->id_transaksi, 6, '0', STR_PAD_LEFT),
+                'order_number' => $transaction->transaction_id ?? '#' . str_pad($transaction->id_transaksi, 6, '0', STR_PAD_LEFT),
+                'order_date' => $transaction->created_at->format('d F Y'),
+                'due_date' => $transaction->created_at->addDays(1)->format('d F Y'),
 
-            $transaction->delete();
+                // Customer info
+                'customer' => [
+                    'name' => $transaction->customer->nama_lengkap ?? '-',
+                    'email' => $transaction->customer->email ?? '-',
+                    'phone' => $transaction->shipping_phone ?? $transaction->customer->no_telp ?? '-',
+                    'address' => $this->formatAddress($transaction),
+                ],
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Transaction deleted successfully'
-            ]);
+                // Shipping info
+                'shipping' => [
+                    'method' => $transaction->shippingMethod->name ?? '-',
+                    'tracking_number' => $transaction->resi_number ?? 'Belum tersedia',
+                    'address' => $this->formatShippingAddress($transaction),
+                ],
+
+                // Payment info
+                'payment' => [
+                    'method' => strtoupper(str_replace('_', ' ', $transaction->metode_pembayaran)),
+                    'status' => $this->translatePaymentStatus($transaction->payment_status),
+                    'paid_at' => $transaction->paid_at ? $transaction->paid_at->format('d F Y H:i') : '-',
+                ],
+
+                // Items
+                'items' => $transaction->details->map(function ($detail) {
+                    return [
+                        'product_name' => $detail->produk->name ?? 'Produk tidak tersedia',
+                        'variant' => ($detail->size ? 'Size: ' . $detail->size->size : '') .
+                            ($detail->color ? ' | Warna: ' . $detail->color->name : ''),
+                        'price' => $detail->harga,
+                        'quantity' => $detail->qty,
+                        'discount' => $detail->diskon ?? 0,
+                        'subtotal' => ($detail->harga * $detail->qty) - ($detail->diskon ?? 0),
+                    ];
+                })->toArray(),
+
+                // Totals
+                'subtotal' => $transaction->subtotal,
+                'discount_amount' => $transaction->discount_amount,
+                'shipping_cost' => $transaction->shipping_cost,
+                'total_amount' => $transaction->total_amount,
+
+                // Approval info
+                'approved_by' => $transaction->approvedBy ? [
+                    'name' => $transaction->approvedBy->nama_lengkap,
+                    'role' => $transaction->approvedBy->role,
+                ] : null,
+
+                'notes' => $transaction->catatan,
+            ];
+
+            $pdf = Pdf::loadView('admin.exports.invoice-pdf', $invoiceData);
+            $pdf->setPaper('a4', 'portrait');
+
+            $filename = 'invoice-' . $invoiceData['invoice_number'] . '.pdf';
+
+            return $pdf->download($filename);
+
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete transaction: ' . $e->getMessage()
-            ], 500);
+            \Log::error('Invoice generation error: ' . $e->getMessage());
+
+            return back()->with('error', 'Gagal generate invoice: ' . $e->getMessage());
         }
     }
 
+    /**
+     * Export transaksi ke PDF
+     */
     public function export(Request $request)
     {
         try {
-            // Get filters from request
-            $query = Transaksi::with(['customer', 'details.produk'])
+            // Query dengan filter yang sama seperti index
+            $query = Transaksi::with(['customer', 'shippingMethod', 'details', 'approvedBy'])
                 ->orderBy('created_at', 'desc');
 
             if ($request->filled('status')) {
@@ -363,59 +653,49 @@ class TransactionController extends Controller
                 $query->where('payment_status', $request->payment_status);
             }
 
-            $transactions = $query->get();
-
-            // Create CSV
-            $filename = 'transactions_' . date('Y-m-d_His') . '.csv';
-            $handle = fopen('php://output', 'w');
-
-            // Set headers for download
-            header('Content-Type: text/csv');
-            header('Content-Disposition: attachment; filename="' . $filename . '"');
-
-            // CSV Headers
-            fputcsv($handle, [
-                'Order ID',
-                'Transaction ID',
-                'Customer Name',
-                'Customer Email',
-                'Phone',
-                'Total Amount',
-                'Payment Method',
-                'Payment Status',
-                'Order Status',
-                'Resi Number',
-                'Order Date'
-            ]);
-
-            // Data rows
-            foreach ($transactions as $transaction) {
-                fputcsv($handle, [
-                    str_pad($transaction->id_transaksi, 6, '0', STR_PAD_LEFT),
-                    $transaction->transaction_id,
-                    $transaction->customer->nama_lengkap ?? 'N/A',
-                    $transaction->customer->email ?? 'N/A',
-                    $transaction->customer->no_telp ?? 'N/A',
-                    number_format($transaction->total_amount, 0, ',', '.'),
-                    strtoupper(str_replace('_', ' ', $transaction->metode_pembayaran)),
-                    ucfirst($transaction->payment_status),
-                    ucfirst($transaction->status),
-                    $transaction->resi_number ?? 'Not available',
-                    $transaction->created_at->format('d M Y H:i')
-                ]);
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('id_transaksi', 'like', "%{$search}%")
+                        ->orWhere('transaction_id', 'like', "%{$search}%")
+                        ->orWhere('resi_number', 'like', "%{$search}%")
+                        ->orWhereHas('customer', function ($q) use ($search) {
+                            $q->where('nama_lengkap', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        });
+                });
             }
 
-            fclose($handle);
-            exit;
+            $transactions = $query->get();
+
+            $data = [
+                'transactions' => $transactions,
+                'filters' => [
+                    'status' => $request->status ? $this->translateStatus($request->status) : 'Semua',
+                    'payment_status' => $request->payment_status ? $this->translatePaymentStatus($request->payment_status) : 'Semua',
+                    'search' => $request->search ?: 'Tidak ada',
+                    'total_records' => $transactions->count(),
+                ],
+                'export_date' => Carbon::now()->format('d F Y H:i:s')
+            ];
+
+            $pdf = Pdf::loadView('admin.exports.transactions-pdf', $data);
+            $pdf->setPaper('a4', 'landscape');
+
+            $filename = 'laporan-transaksi-' . Carbon::now()->format('Y-m-d-H-i-s') . '.pdf';
+
+            return $pdf->download($filename);
 
         } catch (\Exception $e) {
-            \Log::error('Export error: ' . $e->getMessage());
+            \Log::error('Export transactions error: ' . $e->getMessage());
 
-            return back()->with('error', 'Failed to export: ' . $e->getMessage());
+            return back()->with('error', 'Gagal mengexport data: ' . $e->getMessage());
         }
     }
 
-
+    /**
+     * Get statistik transaksi
+     */
     public function statistics(Request $request)
     {
         try {
@@ -434,10 +714,132 @@ class TransactionController extends Controller
                 'success' => true,
                 'data' => $stats
             ]);
+
         } catch (\Exception $e) {
+            \Log::error('Get statistics error: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to get statistics: ' . $e->getMessage()
+                'message' => 'Gagal mengambil statistik: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Format alamat customer
+     */
+    private function formatAddress($transaction)
+    {
+        $address = [];
+        if ($transaction->shipping_address)
+            $address[] = $transaction->shipping_address;
+        if ($transaction->shipping_village_name)
+            $address[] = $transaction->shipping_village_name;
+        if ($transaction->shipping_district_name)
+            $address[] = $transaction->shipping_district_name;
+        if ($transaction->shipping_regency_name)
+            $address[] = $transaction->shipping_regency_name;
+        if ($transaction->shipping_province_name)
+            $address[] = $transaction->shipping_province_name;
+        if ($transaction->shipping_postal_code)
+            $address[] = $transaction->shipping_postal_code;
+
+        return implode(', ', $address);
+    }
+
+    /**
+     * Format alamat pengiriman
+     */
+    private function formatShippingAddress($transaction)
+    {
+        $parts = [];
+        if ($transaction->shipping_name)
+            $parts[] = $transaction->shipping_name;
+        if ($transaction->shipping_phone)
+            $parts[] = $transaction->shipping_phone;
+
+        $address = $this->formatAddress($transaction);
+        if ($address)
+            $parts[] = $address;
+
+        return implode(' | ', $parts);
+    }
+
+    /**
+     * Translate status ke Indonesia
+     */
+    private function translateStatus($status)
+    {
+        $translations = [
+            'pending' => 'Menunggu',
+            'processing' => 'Diproses',
+            'shipped' => 'Dikirim',
+            'completed' => 'Selesai',
+            'cancelled' => 'Dibatalkan'
+        ];
+        return $translations[$status] ?? $status;
+    }
+
+    /**
+     * Translate payment status ke Indonesia
+     */
+    private function translatePaymentStatus($status)
+    {
+        $translations = [
+            'pending' => 'Menunggu',
+            'paid' => 'Lunas',
+            'failed' => 'Gagal',
+            'refunded' => 'Dikembalikan'
+        ];
+        return $translations[$status] ?? $status;
+    }
+
+    /**
+     * Hapus transaksi (opsional)
+     */
+    public function destroy($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $transaction = Transaksi::with('details.produk')->findOrFail($id);
+            $admin = Auth::guard('admin')->user();
+
+            // Hanya admin dan owner yang boleh hapus
+            if (!in_array($admin->role, ['admin', 'owner'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda tidak memiliki akses untuk menghapus transaksi'
+                ], 403);
+            }
+
+            // Kembalikan stok jika transaksi belum cancelled
+            if ($transaction->status !== 'cancelled') {
+                $this->restockProducts($transaction);
+            }
+
+            // Hapus detail transaksi terlebih dahulu
+            $transaction->details()->delete();
+
+            // Hapus transaksi
+            $transaction->delete();
+
+            DB::commit();
+
+            \Log::info("Transaksi {$id} dihapus oleh {$admin->nama_lengkap}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaksi berhasil dihapus!'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error delete transaction: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus transaksi: ' . $e->getMessage()
             ], 500);
         }
     }

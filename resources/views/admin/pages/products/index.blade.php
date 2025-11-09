@@ -1,10 +1,10 @@
 @extends('admin.layouts.mainLayout')
-@section('title', 'Products')
+@section('title', 'Data Produk')
 
 @section('content')
-    <!--start breadcrumb-->
+    <!-- Breadcrumb -->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
-        <div class="breadcrumb-title pe-3">Products</div>
+        <div class="breadcrumb-title pe-3">Produk</div>
         <div class="ps-3">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 p-0 align-items-center">
@@ -13,83 +13,88 @@
                             <ion-icon name="home-sharp"></ion-icon>
                         </a>
                     </li>
-                    <li class="breadcrumb-item active" aria-current="page">Products</li>
+                    <li class="breadcrumb-item active" aria-current="page">Produk</li>
                 </ol>
             </nav>
         </div>
         <div class="ms-auto">
             <a href="{{ route('admin.products.create') }}" class="btn btn-primary">
                 <ion-icon name="add-circle" class="align-middle me-1"></ion-icon>
-                Add Product
+                Tambah Produk
             </a>
+            <button type="button" class="btn btn-success me-2" data-bs-toggle="modal" data-bs-target="#exportModal">
+                <ion-icon name="download-outline" class="align-middle"></ion-icon>
+                Export PDF
+            </button>
         </div>
     </div>
-    <!--end breadcrumb-->
 
-    <!-- Display Alerts -->
+    <!-- Alert Sukses -->
     @if (session('success'))
-        <div class="alert alert-dismissible fade show py-2 bg-success">
+        <div class="alert alert-success alert-dismissible fade show">
             <div class="d-flex align-items-center">
-                <div class="fs-3 text-white"><ion-icon name="checkmark-circle-sharp"></ion-icon></div>
-                <div class="ms-3">
-                    <div class="text-white">{{ session('success') }}</div>
+                <div class="fs-4 text-success me-2">
+                    <ion-icon name="checkmark-circle"></ion-icon>
                 </div>
+                <div>{{ session('success') }}</div>
             </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
+    <!-- Alert Error -->
     @if (session('error'))
-        <div class="alert alert-dismissible fade show py-2 bg-danger">
+        <div class="alert alert-danger alert-dismissible fade show">
             <div class="d-flex align-items-center">
-                <div class="fs-3 text-white"><ion-icon name="close-circle-sharp"></ion-icon></div>
-                <div class="ms-3">
-                    <div class="text-white">{{ session('error') }}</div>
+                <div class="fs-4 text-danger me-2">
+                    <ion-icon name="alert-circle"></ion-icon>
                 </div>
+                <div>{{ session('error') }}</div>
             </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
-    <!-- Products -->
+    <!-- Card Produk -->
     <div class="card">
         <div class="card-body">
             <div class="d-flex align-items-center mb-3">
-                <h5 class="mb-0">All Products</h5>
+                <h5 class="mb-0">Semua Produk</h5>
 
-                <!-- View Toggle -->
+                <!-- Toggle View (List/Grid) -->
                 <div class="btn-group ms-3" role="group">
-                    <button type="button" class="btn btn-sm btn-outline-primary active" id="listViewBtn">
+                    <button type="button" class="btn btn-sm btn-outline-primary active" id="listViewBtn"
+                        title="Tampilan List">
                         <ion-icon name="list" class="align-middle"></ion-icon>
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="gridViewBtn">
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="gridViewBtn" title="Tampilan Grid">
                         <ion-icon name="grid" class="align-middle"></ion-icon>
                     </button>
                 </div>
 
                 <!-- Search -->
-                <form class="ms-auto position-relative">
+                <div class="ms-auto position-relative">
                     <div class="position-absolute top-50 translate-middle-y search-icon px-3">
                         <ion-icon name="search-sharp"></ion-icon>
                     </div>
-                    <input class="form-control ps-5" type="text" id="searchInput" placeholder="Search products...">
-                </form>
+                    <input class="form-control ps-5" type="text" id="searchInput" placeholder="Cari produk...">
+                </div>
             </div>
 
-            <!-- List View -->
+            <!-- TAMPILAN LIST -->
             <div id="listView">
                 <div class="table-responsive">
-                    <table class="table align-middle">
-                        <thead class="table-secondary">
+                    <table class="table align-middle table-hover">
+                        <thead class="table-light">
                             <tr>
-                                <th>#</th>
-                                <th>Image</th>
-                                <th>Product Name</th>
-                                <th>Price</th>
-                                <th>Stock</th>
-                                <th>Status</th>
-                                <th>Categories</th>
-                                <th>Actions</th>
+                                <th width="60">#</th>
+                                <th width="100">Gambar</th>
+                                <th>Nama Produk</th>
+                                <th width="150">Harga</th>
+                                <th width="100">Stok</th>
+                                <th width="100">Status</th>
+                                <th width="150">Kategori</th>
+                                <th width="180" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="productsTable">
@@ -99,30 +104,36 @@
                                     <td>
                                         @if ($product->primaryImage)
                                             <img src="{{ asset('storage/' . $product->primaryImage->image_url) }}"
-                                                alt="{{ $product->name }}" class="rounded"
-                                                style="width: 60px; height: 60px; object-fit: cover;">
+                                                alt="{{ $product->name }}" class="rounded shadow-sm"
+                                                style="width: 70px; height: 70px; object-fit: cover; cursor: pointer;"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#imagePreviewModal{{ $product->id_produk }}">
                                         @else
-                                            <div class="bg-light rounded d-flex align-items-center justify-content-center"
-                                                style="width: 60px; height: 60px;">
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center shadow-sm"
+                                                style="width: 70px; height: 70px;">
                                                 <ion-icon name="image-outline"
                                                     style="font-size: 30px; color: #ccc;"></ion-icon>
                                             </div>
                                         @endif
                                     </td>
                                     <td>
-                                        <strong>{{ $product->name }}</strong>
-                                        @if ($product->promotion)
-                                            <span class="badge bg-danger ms-1">{{ $product->promotion->name }}</span>
-                                        @endif
-                                        @if ($product->is_new)
-                                            <span class="badge bg-info ms-1">New</span>
-                                        @endif
-                                        @if ($product->is_featured)
-                                            <span class="badge bg-warning ms-1">Featured</span>
-                                        @endif
-                                        @if ($product->is_best_seller)
-                                            <span class="badge bg-success ms-1">Best Seller</span>
-                                        @endif
+                                        <div>
+                                            <strong>{{ $product->name }}</strong>
+                                            <div class="mt-1">
+                                                @if ($product->promotion)
+                                                    <span class="badge bg-danger">{{ $product->promotion->name }}</span>
+                                                @endif
+                                                @if ($product->is_new)
+                                                    <span class="badge bg-info">Baru</span>
+                                                @endif
+                                                @if ($product->is_featured)
+                                                    <span class="badge bg-warning">Unggulan</span>
+                                                @endif
+                                                @if ($product->is_best_seller)
+                                                    <span class="badge bg-success">Terlaris</span>
+                                                @endif
+                                            </div>
+                                        </div>
                                     </td>
                                     <td>
                                         <strong class="text-primary">Rp
@@ -146,9 +157,15 @@
                                     </td>
                                     <td>
                                         @if ($product->is_available)
-                                            <span class="badge bg-success">Available</span>
+                                            <span class="badge bg-success">
+                                                <ion-icon name="checkmark-circle" class="align-middle"></ion-icon>
+                                                Tersedia
+                                            </span>
                                         @else
-                                            <span class="badge bg-secondary">Unavailable</span>
+                                            <span class="badge bg-secondary">
+                                                <ion-icon name="close-circle" class="align-middle"></ion-icon>
+                                                Tidak Tersedia
+                                            </span>
                                         @endif
                                     </td>
                                     <td>
@@ -160,8 +177,8 @@
                                                 class="badge bg-light text-dark">+{{ $product->categories->count() - 2 }}</span>
                                         @endif
                                     </td>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
+                                    <td class="text-center">
+                                        <div class="d-flex justify-content-center gap-2">
                                             <a href="{{ route('admin.products.edit', $product->id_produk) }}"
                                                 class="btn btn-sm btn-primary">
                                                 <ion-icon name="pencil" class="align-middle"></ion-icon>
@@ -170,22 +187,19 @@
                                             <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
                                                 data-bs-target="#deleteModal{{ $product->id_produk }}">
                                                 <ion-icon name="trash" class="align-middle"></ion-icon>
-                                                Delete
+                                                Hapus
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
-
-                                <!-- Delete Modal -->
-                                @include('admin.modals.products.delete', ['product' => $product])
                             @empty
-                                <tr>
+                                <tr id="emptyRow">
                                     <td colspan="8" class="text-center py-5">
-                                        <ion-icon name="cube-outline" style="font-size: 60px; color: #ccc;"></ion-icon>
-                                        <p class="text-muted mt-2 mb-0">No products found</p>
+                                        <ion-icon name="cube-outline" style="font-size: 64px; color: #ccc;"></ion-icon>
+                                        <p class="text-muted mt-3 mb-0">Belum ada produk</p>
                                         <a href="{{ route('admin.products.create') }}" class="btn btn-primary mt-3">
                                             <ion-icon name="add-circle" class="align-middle me-1"></ion-icon>
-                                            Add Your First Product
+                                            Tambah Produk Pertama
                                         </a>
                                     </td>
                                 </tr>
@@ -195,45 +209,48 @@
                 </div>
             </div>
 
-            <!-- Grid View -->
+            <!-- TAMPILAN GRID -->
             <div id="gridView" style="display: none;">
                 <div class="row g-3">
                     @forelse($products as $product)
                         <div class="col-12 col-sm-6 col-md-4 col-lg-3 product-item">
-                            <div class="card h-100">
+                            <div class="card h-100 shadow-sm">
                                 <!-- Product Image -->
-                                <div class="position-relative">
+                                <div class="position-relative" style="cursor: pointer;"
+                                    @if ($product->primaryImage) data-bs-toggle="modal" data-bs-target="#imagePreviewModal{{ $product->id_produk }}" @endif>
                                     @if ($product->primaryImage)
                                         <img src="{{ asset('storage/' . $product->primaryImage->image_url) }}"
                                             class="card-img-top" alt="{{ $product->name }}"
-                                            style="height: 200px; object-fit: cover;">
+                                            style="height: 220px; object-fit: cover;">
                                     @else
                                         <div class="bg-light d-flex align-items-center justify-content-center"
-                                            style="height: 200px;">
+                                            style="height: 220px;">
                                             <ion-icon name="image-outline"
                                                 style="font-size: 60px; color: #ccc;"></ion-icon>
                                         </div>
                                     @endif
 
-                                    <!-- Badges -->
+                                    <!-- Badges Atas Kiri -->
                                     <div class="position-absolute top-0 start-0 m-2">
                                         @if ($product->is_new)
-                                            <span class="badge bg-info">New</span>
+                                            <span class="badge bg-info mb-1">Baru</span>
                                         @endif
                                         @if ($product->is_featured)
-                                            <span class="badge bg-warning">Featured</span>
+                                            <span class="badge bg-warning mb-1">Unggulan</span>
                                         @endif
                                         @if ($product->is_best_seller)
-                                            <span class="badge bg-success">Best Seller</span>
+                                            <span class="badge bg-success">Terlaris</span>
                                         @endif
                                     </div>
 
+                                    <!-- Badge Promosi Atas Kanan -->
                                     @if ($product->promotion)
                                         <div class="position-absolute top-0 end-0 m-2">
                                             <span class="badge bg-danger">{{ $product->promotion->name }}</span>
                                         </div>
                                     @endif
 
+                                    <!-- Badge Diskon Bawah Kanan -->
                                     @if ($product->old_price)
                                         <div class="position-absolute bottom-0 end-0 m-2">
                                             <span class="badge bg-danger">-{{ $product->discount_percentage }}%</span>
@@ -242,7 +259,9 @@
                                 </div>
 
                                 <div class="card-body">
-                                    <h6 class="card-title mb-2">{{ Str::limit($product->name, 50) }}</h6>
+                                    <h6 class="card-title mb-2" style="min-height: 40px;">
+                                        {{ Str::limit($product->name, 50) }}
+                                    </h6>
 
                                     <!-- Price -->
                                     <div class="mb-2">
@@ -263,17 +282,17 @@
                                             @if ($product->quantity > 10) bg-success
                                             @elseif($product->quantity > 0) bg-warning
                                             @else bg-danger @endif">
-                                            Stock: {{ $product->quantity }}
+                                            Stok: {{ $product->quantity }}
                                         </span>
                                         @if ($product->is_available)
-                                            <span class="badge bg-success">Available</span>
+                                            <span class="badge bg-success">Tersedia</span>
                                         @else
-                                            <span class="badge bg-secondary">Unavailable</span>
+                                            <span class="badge bg-secondary">Tidak Tersedia</span>
                                         @endif
                                     </div>
 
                                     <!-- Categories -->
-                                    <div class="mb-3">
+                                    <div class="mb-3" style="min-height: 30px;">
                                         @foreach ($product->categories->take(2) as $category)
                                             <span class="badge bg-primary">{{ $category->name }}</span>
                                         @endforeach
@@ -293,22 +312,19 @@
                                         <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
                                             data-bs-target="#deleteModal{{ $product->id_produk }}">
                                             <ion-icon name="trash" class="align-middle"></ion-icon>
-                                            Delete
+                                            Hapus
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Delete Modal -->
-                        @include('admin.modals.products.delete', ['product' => $product])
                     @empty
                         <div class="col-12 text-center py-5">
-                            <ion-icon name="cube-outline" style="font-size: 60px; color: #ccc;"></ion-icon>
-                            <p class="text-muted mt-2 mb-0">No products found</p>
+                            <ion-icon name="cube-outline" style="font-size: 64px; color: #ccc;"></ion-icon>
+                            <p class="text-muted mt-3 mb-0">Belum ada produk</p>
                             <a href="{{ route('admin.products.create') }}" class="btn btn-primary mt-3">
                                 <ion-icon name="add-circle" class="align-middle me-1"></ion-icon>
-                                Add Your First Product
+                                Tambah Produk Pertama
                             </a>
                         </div>
                     @endforelse
@@ -324,10 +340,39 @@
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- MODAL SECTION  -->
+    @foreach ($products as $product)
+        <!-- Image Preview Modal -->
+        @if ($product->primaryImage)
+            <div class="modal fade" id="imagePreviewModal{{ $product->id_produk }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <ion-icon name="eye-outline" class="align-middle"></ion-icon>
+                                Preview Gambar - {{ $product->name }}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center p-0">
+                            <img src="{{ asset('storage/' . $product->primaryImage->image_url) }}"
+                                alt="{{ $product->name }}" class="img-fluid w-100"
+                                style="max-height: 600px; object-fit: contain; background: #f8f9fa;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <!-- Delete Modal -->
+        @include('admin.modals.products.delete', ['product' => $product])
+        @include('admin.modals.products.export-modal')
+    @endforeach
+
+    <!-- JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // View Toggle
+            // Toggle View (List/Grid)
             const listViewBtn = document.getElementById('listViewBtn');
             const gridViewBtn = document.getElementById('gridViewBtn');
             const listView = document.getElementById('listView');
@@ -349,23 +394,64 @@
                 localStorage.setItem('productView', 'grid');
             });
 
-            // Remember view preference
+            // Ingat preferensi view user
             const savedView = localStorage.getItem('productView');
             if (savedView === 'grid') {
                 gridViewBtn.click();
             }
 
-            // Search functionality
+            // Realtime Search
             const searchInput = document.getElementById('searchInput');
 
             searchInput.addEventListener('keyup', function() {
-                const searchTerm = this.value.toLowerCase();
+                const searchTerm = this.value.toLowerCase().trim();
                 const items = document.querySelectorAll('.product-item');
+                let visibleCount = 0;
 
                 items.forEach(function(item) {
                     const text = item.textContent.toLowerCase();
-                    item.style.display = text.includes(searchTerm) ? '' : 'none';
+                    if (text.includes(searchTerm)) {
+                        item.style.display = '';
+                        visibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
                 });
+
+                // Tampilkan pesan "tidak ada hasil"
+                const noResultMessage = document.getElementById('noResultMessage');
+                if (searchTerm && visibleCount === 0) {
+                    if (!noResultMessage) {
+                        const message = document.createElement('div');
+                        message.id = 'noResultMessage';
+                        message.className = 'text-center py-5';
+                        message.innerHTML = `
+                            <ion-icon name="search-outline" style="font-size: 48px; color: #ccc;"></ion-icon>
+                            <p class="text-muted mt-2 mb-0">
+                                Tidak ada hasil untuk "<strong>${searchTerm}</strong>"
+                            </p>
+                        `;
+
+                        if (listView.style.display !== 'none') {
+                            const tbody = document.getElementById('productsTable');
+                            const tr = document.createElement('tr');
+                            const td = document.createElement('td');
+                            td.colSpan = 8;
+                            td.appendChild(message);
+                            tr.appendChild(td);
+                            tbody.appendChild(tr);
+                        } else {
+                            const row = gridView.querySelector('.row');
+                            const col = document.createElement('div');
+                            col.className = 'col-12';
+                            col.appendChild(message);
+                            row.appendChild(col);
+                        }
+                    }
+                } else if (noResultMessage) {
+                    const parent = noResultMessage.closest('tr') || noResultMessage.closest('.col-12');
+                    if (parent) parent.remove();
+                }
             });
 
             // Auto close alerts

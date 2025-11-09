@@ -8,62 +8,103 @@ use Illuminate\Http\Request;
 
 class TagController extends Controller
 {
-    // Menampilkan semua tags
+    /**
+     * Menampilkan halaman daftar tag
+     * Tag digunakan untuk penanda/label produk (misalnya: Bestseller, New Arrival, Sale)
+     */
     public function index()
     {
-        $tags = Tag::all();  // Ambil semua tags
-        return view('admin.pages.master.tags', compact('tags'));  // Kirim data tags ke view
+        // Ambil semua tag, urutkan dari yang terbaru
+        $tags = Tag::orderBy('created_at', 'desc')->get();
+
+        // Kirim data ke view
+        return view('admin.pages.master.tags', compact('tags'));
     }
 
-    // Menampilkan form untuk membuat tag baru
-    public function create()
-    {
-        return view('admin.modals.master.tags.add');  // Modal untuk tambah tag
-    }
-
-    // Menyimpan tag baru
+    /**
+     * Menyimpan tag baru ke database
+     * Input: nama tag (contoh: Bestseller, New Arrival)
+     */
     public function store(Request $request)
     {
+        // Validasi input
         $request->validate([
             'name' => 'required|string|max:50|unique:tags,name',
+        ], [
+            'name.required' => 'Nama tag wajib diisi',
+            'name.unique' => 'Tag sudah ada, gunakan nama lain',
+            'name.max' => 'Nama tag maksimal 50 karakter',
         ]);
 
-        Tag::create([
-            'name' => $request->name,
-        ]);
+        try {
+            // Simpan tag baru
+            Tag::create([
+                'name' => $request->name,
+            ]);
 
-        return redirect()->route('admin.master.tags')->with('success', 'Tag added successfully.');
+            return redirect()->route('admin.master.tags')
+                ->with('success', 'Tag berhasil ditambahkan!');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal menambahkan tag: ' . $e->getMessage());
+        }
     }
 
-    // Menampilkan form untuk mengedit tag
-    public function edit($id)
-    {
-        $tag = Tag::findOrFail($id);
-        return view('admin.modals.master.tags.edit', compact('tag'));  // Modal untuk edit tag
-    }
-
-    // Mengupdate tag
+    /**
+     * Update data tag yang sudah ada
+     * Bisa ganti nama tag
+     */
     public function update(Request $request, $id)
     {
+        // Validasi input (kecuali ID yang sedang diedit)
         $request->validate([
             'name' => 'required|string|max:50|unique:tags,name,' . $id,
+        ], [
+            'name.required' => 'Nama tag wajib diisi',
+            'name.unique' => 'Tag sudah ada, gunakan nama lain',
+            'name.max' => 'Nama tag maksimal 50 karakter',
         ]);
 
-        $tag = Tag::findOrFail($id);
-        $tag->update([
-            'name' => $request->name,
-        ]);
+        try {
+            // Cari tag berdasarkan ID
+            $tag = Tag::findOrFail($id);
 
-        return redirect()->route('admin.master.tags')->with('success', 'Tag updated successfully.');
+            // Update nama tag
+            $tag->update([
+                'name' => $request->name,
+            ]);
+
+            return redirect()->route('admin.master.tags')
+                ->with('success', 'Tag berhasil diperbarui!');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal memperbarui tag: ' . $e->getMessage());
+        }
     }
 
-    // Menghapus tag
+    /**
+     * Hapus tag dari database
+     */
     public function destroy($id)
     {
-        $tag = Tag::findOrFail($id);
-        $tag->delete();
+        try {
+            // Cari tag yang mau dihapus
+            $tag = Tag::findOrFail($id);
 
-        return redirect()->route('admin.master.tags')->with('success', 'Tag deleted successfully.');
+            // Simpan nama tag (buat pesan sukses)
+            $tagName = $tag->name;
+
+            // Hapus tag
+            $tag->delete();
+
+            return redirect()->route('admin.master.tags')
+                ->with('success', "Tag '{$tagName}' berhasil dihapus!");
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal menghapus tag: ' . $e->getMessage());
+        }
     }
 }
-

@@ -12,104 +12,127 @@ use Illuminate\Support\Facades\Validator;
 class SlideController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan halaman daftar slide
+     * Slide adalah gambar carousel yang ditampilkan di halaman customer
+     * Maksimal 4 slide
      */
     public function index()
     {
-        $slides = Slide::with('promotion')->orderBy('created_at', 'desc')->get();
+        // Ambil semua slide beserta relasi promotion-nya
+        $slides = Slide::with('promotion')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Ambil semua promotion untuk dropdown di modal
         $promotions = Promotion::orderBy('name', 'asc')->get();
+
+        // Kirim data ke view
         return view('admin.pages.master.slides', compact('slides', 'promotions'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan slide baru ke database
+     * Validasi: maksimal 4 slide, gambar wajib diupload
      */
     public function store(Request $request)
     {
-        // Check if already have 4 slides
+        // Cek apakah sudah ada 4 slide (maksimal)
         $slideCount = Slide::count();
         if ($slideCount >= 4) {
-            return redirect()->back()->with('error', 'Maksimal hanya 4 slides yang diperbolehkan. Hapus slide yang ada untuk menambahkan yang baru.');
+            return redirect()->back()
+                ->with('error', 'Maksimal hanya 4 slide yang diperbolehkan. Hapus slide yang ada untuk menambahkan yang baru.');
         }
 
+        // Validasi input
         $validator = Validator::make($request->all(), [
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'promotion_id' => 'nullable|exists:promotions,id',
         ], [
-            'image.required' => 'Gambar slide wajib diupload.',
-            'image.image' => 'File yang diupload harus berupa gambar.',
-            'image.mimes' => 'Format gambar harus jpeg, png, jpg, gif, atau svg.',
-            'image.max' => 'Ukuran gambar maksimal 2MB.',
-            'promotion_id.exists' => 'Promotion tidak valid.',
+            'image.required' => 'Gambar slide wajib diupload',
+            'image.image' => 'File harus berupa gambar',
+            'image.mimes' => 'Format gambar: JPEG, PNG, JPG, GIF, SVG',
+            'image.max' => 'Ukuran gambar maksimal 2MB',
+            'promotion_id.exists' => 'Promosi tidak valid',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput()
-                ->with('error', $validator->errors()->first());
+                ->with('error', 'Mohon periksa kembali data yang diisi');
         }
 
         try {
-            // Upload image
+            // Upload gambar slide
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
+
+                // Generate nama file unik
                 $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+
+                // Simpan ke storage/app/public/slides
                 $imagePath = $image->storeAs('slides', $imageName, 'public');
 
-                // Create slide
+                // Simpan slide ke database
                 Slide::create([
                     'image' => $imagePath,
                     'promotion_id' => $request->promotion_id,
                 ]);
 
                 return redirect()->route('admin.master.slides')
-                    ->with('success', 'Slide berhasil ditambahkan.');
+                    ->with('success', 'Slide berhasil ditambahkan!');
             }
 
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat mengupload gambar.');
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat mengupload gambar');
+
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Gagal menambahkan slide: ' . $e->getMessage());
         }
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update data slide yang sudah ada
+     * Bisa ganti gambar dan/atau promotion
      */
     public function update(Request $request, $id)
     {
+        // Cari slide berdasarkan ID
         $slide = Slide::findOrFail($id);
 
+        // Validasi input
         $validator = Validator::make($request->all(), [
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'promotion_id' => 'nullable|exists:promotions,id',
         ], [
-            'image.image' => 'File yang diupload harus berupa gambar.',
-            'image.mimes' => 'Format gambar harus jpeg, png, jpg, gif, atau svg.',
-            'image.max' => 'Ukuran gambar maksimal 2MB.',
-            'promotion_id.exists' => 'Promotion tidak valid.',
+            'image.image' => 'File harus berupa gambar',
+            'image.mimes' => 'Format gambar: JPEG, PNG, JPG, GIF, SVG',
+            'image.max' => 'Ukuran gambar maksimal 2MB',
+            'promotion_id.exists' => 'Promosi tidak valid',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput()
-                ->with('error', $validator->errors()->first());
+                ->with('error', 'Mohon periksa kembali data yang diisi');
         }
 
         try {
+            // Data yang mau diupdate
             $data = [
                 'promotion_id' => $request->promotion_id,
             ];
 
-            // Check if new image is uploaded
+            // Kalau upload gambar baru
             if ($request->hasFile('image')) {
-                // Delete old image
+                // Hapus gambar lama dari storage
                 if ($slide->image && Storage::disk('public')->exists($slide->image)) {
                     Storage::disk('public')->delete($slide->image);
                 }
 
-                // Upload new image
+                // Upload gambar baru
                 $image = $request->file('image');
                 $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
                 $imagePath = $image->storeAs('slides', $imageName, 'public');
@@ -121,32 +144,38 @@ class SlideController extends Controller
             $slide->update($data);
 
             return redirect()->route('admin.master.slides')
-                ->with('success', 'Slide berhasil diperbarui.');
+                ->with('success', 'Slide berhasil diperbarui!');
+
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Gagal memperbarui slide: ' . $e->getMessage());
         }
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Hapus slide dari database
+     * Termasuk hapus gambar dari storage
      */
     public function destroy($id)
     {
         try {
+            // Cari slide yang mau dihapus
             $slide = Slide::findOrFail($id);
 
-            // Delete image from storage
+            // Hapus gambar dari storage
             if ($slide->image && Storage::disk('public')->exists($slide->image)) {
                 Storage::disk('public')->delete($slide->image);
             }
 
-            // Delete slide
+            // Hapus slide dari database
             $slide->delete();
 
             return redirect()->route('admin.master.slides')
-                ->with('success', 'Slide berhasil dihapus.');
+                ->with('success', 'Slide berhasil dihapus!');
+
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Gagal menghapus slide: ' . $e->getMessage());
         }
     }
 }

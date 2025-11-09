@@ -1,9 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\ChatController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Customer\CartController;
+use App\Http\Controllers\Admin\FeedbackController;
+use App\Http\Controllers\Customer\BuyNowController;
 use App\Http\Controllers\Admin\Auth\LoginController;
 use App\Http\Controllers\Admin\Master\TagController;
 use App\Http\Controllers\Customer\PaymentController;
@@ -15,12 +19,15 @@ use App\Http\Controllers\Customer\WishlistController;
 use App\Http\Controllers\Admin\Master\ColorController;
 use App\Http\Controllers\Admin\Master\SlideController;
 use App\Http\Controllers\Admin\Master\BannerController;
+use App\Http\Controllers\Customer\CustProfileController;
 use App\Http\Controllers\Customer\ProductCustController;
 use App\Http\Controllers\Admin\Master\AudienceController;
 use App\Http\Controllers\Admin\Master\CategoryController;
+use App\Http\Controllers\Customer\CustomerChatController;
 use App\Http\Controllers\Admin\Master\PromoCodeController;
 use App\Http\Controllers\Admin\Master\PromotionController;
 use App\Http\Controllers\Customer\Auth\RegisterController;
+use App\Http\Controllers\Customer\CustomerProfileController;
 use App\Http\Controllers\Customer\Auth\LoginCustController; // SUDAH BENAR
 
 // Home redirect ke customer home
@@ -51,6 +58,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Master Data - HANYA ADMIN
         Route::prefix('master')->name('master.')->middleware('role:admin')->group(function () {
+            // Audience Routes
             // Audience Routes
             Route::get('/audiences', [AudienceController::class, 'index'])->name('audiences');
             Route::post('/audiences', [AudienceController::class, 'store'])->name('audiences.store');
@@ -122,18 +130,21 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::middleware('role:admin')->group(function () {
             Route::resource('products', ProductController::class);
             Route::delete('products/image/{id}', [ProductController::class, 'deleteImage'])->name('products.image.delete');
+            Route::get('products/export/pdf', [ProductController::class, 'exportPdf'])->name('products.export.pdf');
+
         });
 
         // Transaksi - ADMIN & PETUGAS
         Route::middleware('role:admin,petugas')->group(function () {
+            // Di dalam group transactions admin
             Route::prefix('transactions')->name('transactions.')->group(function () {
                 Route::get('/', [TransactionController::class, 'index'])->name('index');
-                // EXPORT HARUS DI ATAS {id} !!!
                 Route::get('transactions/export', [TransactionController::class, 'export'])->name('export');
                 Route::get('transactions/statistics', [TransactionController::class, 'statistics'])->name('statistics');
 
-                // Route dengan {id} harus DI BAWAH
+                // Route dengan {id}
                 Route::get('transactions/{id}', [TransactionController::class, 'show'])->name('show')->where('id', '[0-9]+');
+                Route::get('transactions/{id}/invoice', [TransactionController::class, 'generateInvoice'])->name('invoice')->where('id', '[0-9]+');
                 Route::put('transactions/{id}/status', [TransactionController::class, 'updateStatus'])->name('updateStatus')->where('id', '[0-9]+');
                 Route::put('transactions/{id}/payment-status', [TransactionController::class, 'updatePaymentStatus'])->name('updatePaymentStatus')->where('id', '[0-9]+');
                 Route::put('transactions/{id}/resi', [TransactionController::class, 'updateResi'])->name('updateResi')->where('id', '[0-9]+');
@@ -144,30 +155,51 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // Chat & Feedback - ADMIN & PETUGAS
         Route::middleware('role:admin,petugas')->group(function () {
-            Route::get('/chat', function () {
-                return view('admin.pages.chat');
-            })->name('chat');
-
-            Route::get('/feedback', function () {
-                return view('admin.pages.feedback');
-            })->name('feedback');
+            // ===== CHAT ROUTES =====
+            Route::prefix('chat')->name('chat.')->middleware('role:admin,petugas')->group(function () {
+                Route::get('/', [ChatController::class, 'index'])->name('index');
+                Route::get('/{id}', [ChatController::class, 'show'])->name('show');
+                Route::post('/{id}/send', [ChatController::class, 'sendMessage'])->name('send');
+                Route::put('/{id}/status', [ChatController::class, 'updateStatus'])->name('updateStatus');
+                Route::post('/{id}/assign', [ChatController::class, 'assignToAdmin'])->name('assign');
+                Route::get('/unread/count', [ChatController::class, 'getUnreadCount'])->name('unread.count');
+                Route::get('/latest/chats', [ChatController::class, 'getLatestChats'])->name('latest.chats');
+            });
+            Route::prefix('feedback')->name('feedback.')->group(function () {
+                Route::get('/', [FeedbackController::class, 'index'])->name('index');
+                Route::get('/{id}', [FeedbackController::class, 'show'])->name('show');
+                Route::put('/{id}/approve', [FeedbackController::class, 'approve'])->name('approve');
+                Route::put('/{id}/reject', [FeedbackController::class, 'reject'])->name('reject');
+                Route::delete('/{id}', [FeedbackController::class, 'destroy'])->name('destroy');
+                Route::get('/statistics/data', [FeedbackController::class, 'statistics'])->name('statistics');
+            });
         });
 
         // Laporan - OWNER & ADMIN
         Route::prefix('reports')->name('reports.')->middleware('role:owner,admin')->group(function () {
-            Route::get('/sales', function () {
-                return view('admin.pages.reports.sales');
-            })->name('sales');
+            // Laporan Penjualan
+            Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
 
+            // Export Laporan
+            Route::get('/export', [ReportController::class, 'export'])->name('export');
+
+            // Detail Transaksi (AJAX)
+            Route::get('/transaction/{id}', [ReportController::class, 'transactionDetail'])->name('transaction.detail');
+
+            // Laporan Feedback (opsional, kalau ada)
             Route::get('/feedback', function () {
                 return view('admin.pages.reports.feedback_summary');
             })->name('feedback');
         });
 
         // Profil & Logout - SEMUA ROLE
-        Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
-        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-        Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
+        Route::get('profile', [ProfileController::class, 'index'])->name('profile');
+        Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+        Route::put('profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar');
+        Route::delete('profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.delete');
+
 
         Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
     });
@@ -201,28 +233,54 @@ Route::name('customer.')->group(function () {
     Route::get('/products', [ProductCustController::class, 'index'])->name('products');
     Route::get('/product/{id}', [ProductCustController::class, 'show'])->name('product.detail');
 
+
+    // Contact Page
     Route::get('/contact', function () {
         return view('customer.pages.contact');
     })->name('contact');
 
+
+
+
     // Protected Routes (Require Login)
     Route::middleware('auth:customer')->group(function () {
-        // Wishlist Routes
         Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist');
-        Route::post('/wishlist', [WishlistController::class, 'store'])->name('wishlist.add');
+
+        // POST /wishlist/store - Tambah produk ke wishlist (AJAX)
+        Route::post('/wishlist/store', [WishlistController::class, 'store'])->name('wishlist.store');
+
+        // POST /wishlist/toggle/{productId} - Toggle tambah/hapus (AJAX)
+        Route::post('/wishlist/toggle/{productId}', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+
+        // DELETE /wishlist/{id} - Hapus item dari wishlist (AJAX)
         Route::delete('/wishlist/{id}', [WishlistController::class, 'destroy'])->name('wishlist.remove');
 
         // Cart Routes
         Route::get('/cart', [CartController::class, 'index'])->name('cart');
         Route::post('/cart', [CartController::class, 'store'])->name('cart.add');
         Route::put('/cart/{id}', [CartController::class, 'update'])->name('cart.update');
+        Route::put('/cart/variant/{id}', [CartController::class, 'updateVariant'])->name('cart.update.variant');
         Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.remove');
+        Route::get('/cart/validate', [CartController::class, 'validateCart'])->name('cart.validate');
+        Route::post('/cart/add/{productId}', [CartController::class, 'addToCart'])->name('cart.quick-add');
 
-        // Checkout Routes
+        // Route untuk AJAX Cart & Wishlist
+        Route::post('/customer/cart/add/{productId}', [CartController::class, 'addToCart']);
+        Route::post('/customer/wishlist/toggle/{productId}', [WishlistController::class, 'toggle']);
+        // ========== CHECKOUT ==========
         Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
         Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');
+        Route::post('/checkout/validate-promo', [CheckoutController::class, 'validatePromoCode'])->name('checkout.validate-promo');
+        Route::get('/checkout/success/{id}', [CheckoutController::class, 'success'])->name('checkout.success');
 
-        // ✅ TAMBAH INI: Upload payment page (sebelum success)
+        // ========== BUY NOW ✅ PENTING! ==========
+        Route::post('/buy-now', [BuyNowController::class, 'store'])->name('buy.now');
+        Route::get('/buy-now-checkout', [BuyNowController::class, 'checkout'])->name('buy.now.checkout');
+        Route::post('/buy-now-process', [BuyNowController::class, 'process'])->name('buy.now.process');
+
+
+
+        // Upload payment page (sebelum success)
         Route::get('/payment/upload/{id}', [PaymentController::class, 'showUploadPage'])->name('payment.upload.page');
         Route::post('/payment/upload/{id}', [PaymentController::class, 'uploadProof'])->name('payment.upload');
 
@@ -230,16 +288,20 @@ Route::name('customer.')->group(function () {
         Route::get('/checkout/success/{id}', [CheckoutController::class, 'success'])->name('checkout.success');
 
         // Profile & Orders
-        Route::get('/profile', function () {
-            return view('customer.pages.profile');
-        })->name('profile');
+        Route::get('/profile', [CustProfileController::class, 'index'])->name('profile');
+        Route::post('/profile/update', [CustProfileController::class, 'update'])->name('profile.update');
+        Route::post('/profile/update-password', [CustProfileController::class, 'updatePassword'])->name('profile.updatePassword');
 
         Route::get('/orders', function () {
             return view('customer.pages.orders');
         })->name('orders');
+        Route::prefix('chat')->name('chat.')->group(function () {
+            Route::get('/', [CustomerChatController::class, 'index'])->name('index');
+            Route::post('/start', [CustomerChatController::class, 'startChat'])->name('start');
+            Route::get('/room/{id}', [CustomerChatController::class, 'showRoom'])->name('room');
+            Route::post('/room/{id}/send', [CustomerChatController::class, 'sendMessage'])->name('send');
+            Route::get('/unread/count', [CustomerChatController::class, 'getUnreadCount'])->name('unread.count');
+        });
 
-        Route::get('/chat', function () {
-            return view('customer.pages.chat');
-        })->name('chat');
     });
 });

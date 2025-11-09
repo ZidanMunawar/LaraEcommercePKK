@@ -3,59 +3,78 @@
         <!-- Top Header -->
         <div class="header-top-area grocery__top-header">
             <div class="header-layout-4">
-                <div class="header-to-main d-none d-sm-flex">
+                <div class="header-to-main d-flex align-items-center justify-content-between">
                     <div class="link-text">
-                        <span><img src="{{ asset('assets-customer/imgs/icons/call.png') }}" alt=""></span>
-                        <a href="tel:+628123456789">+62 812 3456 789</a>
+                        <span><i class="bi bi-telephone-fill text-white me-2"></i></span>
+                        <a href="tel:+6283865941815" class="text-white">+62 838 6594 1815</a>
                     </div>
-                    <div class="header-top-notice d-none d-lg-block">
-                        <p>FREE SHIPPING ON ORDERS OVER <span class="text-white">IDR 500K</span> USE CODE "ZYNHOPE2024"
-                        </p>
+
+                    <div class="header-top-notice d-none d-md-block">
+                        <p>DISKON <span class="text-white">Rp 15.000</span> GUNAKAN KODE "ZYNHOPE2024"</p>
                     </div>
+
                     <div class="tp-header-top-menu d-flex align-items-center justify-content-end">
                         @guest('customer')
                             <div class="header-lang-item">
                                 <a href="{{ route('customer.login') }}" class="text-white">
-                                    <i class="far fa-sign-in"></i> Login
+                                    <i class="bi bi-box-arrow-in-right me-1"></i> <span
+                                        class="d-none d-sm-inline">Masuk</span>
                                 </a>
                             </div>
                             <div class="header-lang-item">
                                 <a href="{{ route('customer.register') }}" class="text-white">
-                                    <i class="far fa-user-plus"></i> Register
+                                    <i class="bi bi-person-plus me-1"></i> <span class="d-none d-sm-inline">Daftar</span>
                                 </a>
                             </div>
                         @else
-                            <div class="header-lang-item tp-header-setting">
-                                <span class="header-setting-toggle text-white" id="header-setting-toggle">
-                                    <i class="far fa-user"></i> {{ Auth::guard('customer')->user()->nama_lengkap }}
-                                </span>
-                                <ul>
-                                    <li>
-                                        <a class="furniture-clr-hover" href="{{ route('customer.profile') }}">
-                                            <i class="far fa-user"></i> My Profile
+                            <div class="header-lang-item">
+                                <div style="position: relative; display: inline-block;">
+                                    <button type="button" id="profileBtn"
+                                        style="background: none; border: none; color: white; cursor: pointer; font-size: 16px; padding: 0;"
+                                        onclick="toggleProfileMenu()">
+                                        <i class="bi bi-person-circle me-2"></i>
+                                        <span
+                                            class="d-none d-sm-inline">{{ Str::limit(Auth::guard('customer')->user()->nama_lengkap, 20) }}</span>
+                                        <i class="bi bi-caret-down-fill ms-2"></i>
+                                    </button>
+
+                                    <div id="profileMenu"
+                                        style="position: absolute; top: 100%; right: 0; background: white; border: 1px solid #e9ecef; border-radius: 8px; min-width: 240px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 1000; display: none; margin-top: 10px;">
+                                        <a href="{{ route('customer.profile') }}"
+                                            style="display: flex; align-items: center; padding: 12px 20px; color: #333; text-decoration: none; border-bottom: 1px solid #f1f3f5; transition: all 0.2s;"
+                                            onmouseover="this.style.backgroundColor='#f8f9fa'"
+                                            onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="bi bi-person me-2 text-primary"></i>
+                                            <span>Profil Saya</span>
                                         </a>
-                                    </li>
-                                    <li>
-                                        <a class="furniture-clr-hover" href="{{ route('customer.orders') }}">
-                                            <i class="far fa-box"></i> My Orders
+                                        <a href="{{ route('customer.orders') }}"
+                                            style="display: flex; align-items: center; padding: 12px 20px; color: #333; text-decoration: none; border-bottom: 1px solid #f1f3f5; transition: all 0.2s;"
+                                            onmouseover="this.style.backgroundColor='#f8f9fa'"
+                                            onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="bi bi-bag me-2 text-success"></i>
+                                            <span>Pesanan Saya</span>
                                         </a>
-                                    </li>
-                                    <li>
-                                        <a class="furniture-clr-hover" href="{{ route('customer.wishlist') }}">
-                                            <i class="far fa-heart"></i> Wishlist
+                                        <a href="{{ route('customer.wishlist') }}"
+                                            style="display: flex; align-items: center; padding: 12px 20px; color: #333; text-decoration: none; border-bottom: 1px solid #f1f3f5; transition: all 0.2s;"
+                                            onmouseover="this.style.backgroundColor='#f8f9fa'"
+                                            onmouseout="this.style.backgroundColor='transparent'">
+                                            <i class="bi bi-heart me-2 text-danger"></i>
+                                            <span>Wishlist</span>
                                         </a>
-                                    </li>
-                                    <li>
+                                        <hr style="margin: 5px 0; border: none; border-top: 1px solid #e9ecef;">
                                         <form action="{{ route('customer.logout') }}" method="POST"
-                                            style="display: inline;">
+                                            style="display: block;">
                                             @csrf
-                                            <button type="submit" class="furniture-clr-hover"
-                                                style="border:none; background:none; cursor:pointer; padding: 0; width: 100%; text-align: left;">
-                                                <i class="far fa-sign-out"></i> Logout
+                                            <button type="submit"
+                                                style="width: 100%; text-align: left; background: none; border: none; padding: 12px 20px; color: #dc3545; cursor: pointer; display: flex; align-items: center; transition: all 0.2s;"
+                                                onmouseover="this.style.backgroundColor='#f8f9fa'"
+                                                onmouseout="this.style.backgroundColor='transparent'">
+                                                <i class="bi bi-box-arrow-right me-2"></i>
+                                                <span>Keluar</span>
                                             </button>
                                         </form>
-                                    </li>
-                                </ul>
+                                    </div>
+                                </div>
                             </div>
                         @endguest
                     </div>
@@ -67,148 +86,129 @@
         <div class="header-layout-4 header-bottom">
             <div id="header-sticky" class="header-4">
                 <div class="mega-menu-wrapper">
-                    <div class="header-main-4">
-                        <div class="header-left">
-                            <div class="header-logo">
-                                <a href="{{ route('customer.home') }}">
-                                    <img src="{{ asset('assets-customer/imgs/logo/zynhope-logo.svg') }}"
-                                        alt="ZynHope Apparel">
-                                </a>
-                            </div>
-                            <div class="mean__menu-wrapper furniture__menu d-none d-lg-block">
-                                <div class="main-menu">
-                                    <nav id="mobile-menu">
-                                        <ul>
-                                            <li><a href="{{ route('customer.home') }}">Home</a></li>
-                                            <li><a href="{{ route('customer.about') }}">About</a></li>
-                                            <li class="has-dropdown">
-                                                <a href="{{ route('customer.products') }}">Shop</a>
-                                                <ul class="submenu">
-                                                    <li><a href="{{ route('customer.products') }}">All Products</a>
-                                                    </li>
-                                                    @auth('customer')
-                                                        <li><a href="{{ route('customer.cart') }}">Shopping Cart</a></li>
-                                                        <li><a href="{{ route('customer.wishlist') }}">Wishlist</a></li>
-                                                        <li><a href="{{ route('customer.checkout') }}">Checkout</a></li>
-                                                    @endauth
-                                                </ul>
-                                            </li>
-                                            <li><a href="{{ route('customer.contact') }}">Contact</a></li>
-                                        </ul>
-                                    </nav>
+                    <div class="container-fluid">
+                        <div class="header-main-4">
+                            <div class="header-left">
+                                <div class="header-logo">
+                                    <a href="{{ route('customer.home') }}">
+                                        <img src="{{ asset('assets/images/logo-icon-2.png') }}" class="logo-icon"
+                                            alt="ZynHope Apparel" style="width: 100px; height: auto;">
+                                    </a>
+                                </div>
+
+                                <div class="mean__menu-wrapper furniture__menu d-none d-lg-block">
+                                    <div class="main-menu">
+                                        <nav id="mobile-menu">
+                                            <ul>
+                                                <li><a href="{{ route('customer.home') }}"><i
+                                                            class="bi bi-house-door me-1"></i> Beranda</a></li>
+                                                <li><a href="{{ route('customer.about') }}"><i
+                                                            class="bi bi-info-circle me-1"></i> Tentang</a></li>
+                                                <li class="has-dropdown">
+                                                    <a href="{{ route('customer.products') }}"><i
+                                                            class="bi bi-shop me-1"></i> Belanja</a>
+                                                    <ul class="submenu">
+                                                        <li><a href="{{ route('customer.products') }}"><i
+                                                                    class="bi bi-grid me-2"></i> Semua Produk</a></li>
+                                                        @auth('customer')
+                                                            <li><a href="{{ route('customer.cart') }}"><i
+                                                                        class="bi bi-cart me-2"></i> Keranjang Belanja</a>
+                                                            </li>
+                                                            <li><a href="{{ route('customer.wishlist') }}"><i
+                                                                        class="bi bi-heart me-2"></i> Wishlist</a></li>
+                                                            <li><a href="{{ route('customer.checkout') }}"><i
+                                                                        class="bi bi-credit-card me-2"></i> Checkout</a>
+                                                            </li>
+                                                        @endauth
+                                                    </ul>
+                                                </li>
+                                                <li class="has-dropdown">
+                                                    <a href="#"><i class="bi bi-tags me-1"></i> Kategori</a>
+                                                    <ul class="submenu">
+                                                        @php
+                                                            $categories = \App\Models\Category::orderBy(
+                                                                'name',
+                                                                'asc',
+                                                            )->get();
+                                                        @endphp
+                                                        @forelse($categories as $category)
+                                                            <li><a
+                                                                    href="{{ route('customer.products', ['category' => $category->id]) }}"><i
+                                                                        class="bi bi-tag me-2"></i>
+                                                                    {{ $category->name }}</a></li>
+                                                        @empty
+                                                            <li><a href="#">Tidak ada kategori</a></li>
+                                                        @endforelse
+                                                    </ul>
+                                                </li>
+                                                <li><a href="{{ route('customer.contact') }}"><i
+                                                            class="bi bi-envelope me-1"></i> Kontak</a></li>
+                                            </ul>
+                                        </nav>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="header-right d-inline-flex align-items-center justify-content-end">
-                            <div class="header-search d-none d-xxl-block">
-                                <form action="{{ route('customer.products') }}" method="GET">
-                                    <input type="text" name="search" placeholder="Search products...">
-                                    <button type="submit">
-                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                                            <path d="M13.4443 13.4445L16.9999 17" stroke="white" stroke-width="2"
-                                                stroke-linecap="round" stroke-linejoin="round" />
-                                            <path
-                                                d="M15.2222 8.11111C15.2222 12.0385 12.0385 15.2222 8.11111 15.2222C4.18375 15.2222 1 12.0385 1 8.11111C1 4.18375 4.18375 1 8.11111 1C12.0385 1 15.2222 4.18375 15.2222 8.11111Z"
-                                                stroke="white" stroke-width="2" />
-                                        </svg>
-                                    </button>
-                                </form>
-                            </div>
-                            <div class="header-action d-flex align-items-center ml-30">
-                                @auth('customer')
-                                    <!-- Chat Icon (Hanya muncul kalau login) -->
-                                    <div class="header-action-item">
-                                        <a href="{{ route('customer.chat') }}" class="header-action-btn"
-                                            title="Chat with Admin">
-                                            <svg width="23" height="23" viewBox="0 0 23 23" fill="none"
-                                                xmlns="http://www.w3.org/2000/svg">
-                                                <path
-                                                    d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0034 9.87812 19.6951 8.7 19.1L2 21L3.9 14.3C3.30493 13.1219 2.99656 11.8199 3 10.5C3.00061 8.92179 3.44061 7.37488 4.27072 6.03258C5.10083 4.69028 6.28825 3.6056 7.7 2.90003C8.87812 2.30496 10.1801 1.99659 11.5 2.00003H12C14.0843 2.11502 16.053 2.99479 17.5291 4.47089C19.0052 5.94699 19.885 7.91568 20 10V11.5Z"
-                                                    stroke="black" stroke-width="2" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
-                                            </svg>
-                                            @php
-                                                $unreadMessages = 0; // Nanti diganti dengan logic real dari database
-                                            @endphp
-                                            @if ($unreadMessages > 0)
-                                                <span class="header-action-badge bg-furniture">{{ $unreadMessages }}</span>
-                                            @endif
-                                        </a>
-                                    </div>
 
-                                    <!-- Wishlist Icon -->
-                                    <div class="header-action-item">
-                                        <a href="{{ route('customer.wishlist') }}" class="header-action-btn"
-                                            title="Wishlist">
-                                            <svg width="23" height="21" viewBox="0 0 23 21" fill="none">
-                                                <path d="M21.2743 2.33413C20.6448 1.60193..." fill="black" />
-                                            </svg>
-                                            <!-- ✅ TAMBAH ID UNIK -->
-                                            <span class="header-action-badge bg-furniture" id="wishlist-badge-count">
-                                                @php
-                                                    $wishlistCount =
-                                                        Auth::guard('customer')->user()->wishlist()->count() ?? 0;
-                                                @endphp
-                                                {{ $wishlistCount }}
-                                            </span>
-                                        </a>
-                                    </div>
+                            <div class="header-right d-inline-flex align-items-center justify-content-end">
+                                <div class="header-search d-none d-xxl-block">
+                                    <form action="{{ route('customer.products') }}" method="GET">
+                                        <input type="text" name="search" placeholder="Cari produk..."
+                                            value="{{ request('search') }}">
+                                        <button type="submit"><i class="bi bi-search"></i></button>
+                                    </form>
+                                </div>
 
-                                    <!-- Cart Icon -->
-                                    <div class="header-action-item">
-                                        <a href="{{ route('customer.cart') }}"
-                                            class="header-action-btn cartmini-open-btn" title="Shopping Cart">
-                                            <svg width="21" height="23" viewBox="0 0 21 23" fill="none">
-                                                <path d="M14.0625 10.6C14.0625..." stroke="black" stroke-width="2" />
-                                            </svg>
-                                            <!-- ✅ TAMBAH ID UNIK -->
-                                            <span class="header-action-badge bg-furniture" id="cart-badge-count">
-                                                @php
-                                                    $cartCount = 0;
-                                                    $keranjang = Auth::guard('customer')->user()->keranjang;
-                                                    if ($keranjang) {
-                                                        $cartCount = $keranjang->items()->sum('qty') ?? 0;
-                                                    }
-                                                @endphp
-                                                {{ $cartCount }}
-                                            </span>
-                                        </a>
-                                    </div>
-                                @else
-                                    <!-- Guest User - Show Login Prompt -->
-                                    <div class="header-action-item">
-                                        <a href="{{ route('customer.login') }}" class="header-action-btn"
-                                            title="Login to see wishlist">
-                                            <svg width="23" height="21" viewBox="0 0 23 21" fill="none">
-                                                <path
-                                                    d="M21.2743 2.33413C20.6448 1.60193 19.8543 1.01306 18.9596 0.609951C18.0649 0.206838 17.0883 -0.0004864 16.1002 0.00291444C14.4096 -0.0462975 12.7637 0.529279 11.5011 1.61122C10.2385 0.529279 8.59252 -0.0462975 6.90191 0.00291444C5.91383 -0.0004864 4.93727 0.206838 4.04257 0.609951C3.14788 1.01306 2.35732 1.60193 1.72785 2.33413C0.632101 3.61193 -0.514239 5.92547 0.245772 9.69587C1.4588 15.7168 10.5548 20.6578 10.9388 20.8601C11.11 20.9518 11.3028 21 11.4988 21C11.6948 21 11.8875 20.9518 12.0587 20.8601C12.445 20.6534 21.541 15.7124 22.7518 9.69587C23.5164 5.92547 22.37 3.61193 21.2743 2.33413Z"
-                                                    fill="black" />
-                                            </svg>
-                                            <span class="header-action-badge bg-furniture">0</span>
-                                        </a>
-                                    </div>
-                                    <div class="header-action-item">
-                                        <a href="{{ route('customer.login') }}"
-                                            class="header-action-btn cartmini-open-btn" title="Login to see cart">
-                                            <svg width="21" height="23" viewBox="0 0 21 23" fill="none">
-                                                <path
-                                                    d="M14.0625 10.6C14.0625 12.5883 12.4676 14.2 10.5 14.2C8.53243 14.2 6.9375 12.5883 6.9375 10.6M1 5.8H20M1 5.8V13C1 20.6402 2.33946 22 10.5 22C18.6605 22 20 20.6402 20 13V5.8M1 5.8L2.71856 2.32668C3.12087 1.5136 3.94324 1 4.84283 1H16.1571C17.0568 1 17.8791 1.5136 18.2814 2.32668L20 5.8"
-                                                    stroke="black" stroke-width="2" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
-                                            </svg>
-                                            <span class="header-action-badge bg-furniture">0</span>
-                                        </a>
-                                    </div>
-                                @endauth
-                            </div>
-                            <div class="header-humbager ml-30">
-                                <a class="sidebar__toggle" href="javascript:void(0)">
-                                    <div class="bar-icon-2">
-                                        <span></span>
-                                        <span></span>
-                                        <span></span>
-                                    </div>
-                                </a>
+                                <div class="header-action d-flex align-items-center ml-30">
+                                    @auth('customer')
+                                        <div class="header-action-item">
+                                            <div class="header-action-item">
+                                                <a href="{{ route('customer.chat.index') }}" class="header-action-btn"
+                                                    title="Chat">
+                                                    <i class="bi bi-chat-dots"></i>
+                                                    <span id="chatUnreadBadge" class="header-action-badge"
+                                                        style="display: none;">0</span>
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <div class="header-action-item">
+                                            <a href="{{ route('customer.wishlist') }}" class="header-action-btn"
+                                                title="Wishlist">
+                                                <i class="bi bi-heart"></i>
+                                                <span class="header-action-badge bg-furniture" id="wishlist-badge-count">
+                                                    @php
+                                                        $wishlistCount =
+                                                            Auth::guard('customer')->user()->wishlist()->count() ?? 0;
+                                                    @endphp
+                                                    {{ $wishlistCount }}
+                                                </span>
+                                            </a>
+                                        </div>
+
+                                        <div class="header-action-item">
+                                            <a href="{{ route('customer.cart') }}"
+                                                class="header-action-btn cartmini-open-btn" title="Keranjang">
+                                                <i class="bi bi-cart3"></i>
+                                                <span class="header-action-badge bg-furniture" id="cart-badge-count">
+                                                    @php
+                                                        $cartCount = 0;
+                                                        $keranjang = Auth::guard('customer')->user()->keranjang;
+                                                        if ($keranjang) {
+                                                            $cartCount = $keranjang->items()->sum('qty') ?? 0;
+                                                        }
+                                                    @endphp
+                                                    {{ $cartCount }}
+                                                </span>
+                                            </a>
+                                        </div>
+                                    @endauth
+                                </div>
+
+                                <div class="header-humbager ml-30">
+                                    <a class="sidebar__toggle" href="javascript:void(0)">
+                                        <div class="bar-icon-2"><span></span><span></span><span></span></div>
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -217,3 +217,347 @@
         </div>
     </div>
 </header>
+
+@push('styles')
+    <style>
+        /* Header Top Area - Mobile Friendly */
+        .header-top-area {
+            background-color: #333;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+
+        .header-to-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 0 15px;
+        }
+
+        .link-text a {
+            text-decoration: none;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .header-top-notice p {
+            margin: 0;
+            font-size: 13px;
+            color: #ddd;
+            text-align: center;
+        }
+
+        .header-top-notice .text-white {
+            font-weight: bold;
+        }
+
+        .tp-header-top-menu {
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .header-lang-item a {
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+        }
+
+        .header-lang-item a:hover {
+            opacity: 0.8;
+        }
+
+        /* Main Header - Sticky Fix */
+        #header-sticky {
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-main-4 {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 15px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex: 1;
+        }
+
+        /* Action Items */
+        .header-action-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            min-width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: #fff;
+            padding: 2px 6px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .bg-furniture {
+            background-color: #ff6b6b;
+        }
+
+        .header-action-item {
+            position: relative;
+            margin-left: 15px;
+        }
+
+        .header-action-btn {
+            position: relative;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            font-size: 20px;
+            color: #333;
+            text-decoration: none;
+        }
+
+        .header-action-btn:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.1);
+        }
+
+        /* Profile Menu */
+        #profileBtn {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        /* Hamburger Menu */
+        .header-humbager {
+            display: flex;
+            align-items: center;
+        }
+
+        .bar-icon-2 {
+            display: flex;
+            flex-direction: column;
+            width: 24px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .bar-icon-2 span {
+            display: block;
+            height: 2px;
+            width: 100%;
+            background-color: #333;
+            margin-bottom: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .bar-icon-2 span:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 1199px) {
+            .header-main-4 {
+                padding: 8px 15px;
+            }
+
+            .header-action-item {
+                margin-left: 12px;
+            }
+
+            .header-action-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 991px) {
+            .header-main-4 {
+                padding: 5px 15px;
+            }
+
+            .header-action-item {
+                margin-left: 10px;
+            }
+
+            .header-action-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 16px;
+            }
+
+            .header-humbager {
+                margin-left: 15px !important;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .header-top-area {
+                padding: 6px 0;
+                font-size: 12px;
+            }
+
+            .header-to-main {
+                justify-content: space-between;
+                padding: 0 10px;
+            }
+
+            .header-top-notice {
+                display: none !important;
+            }
+
+            .header-main-4 {
+                padding: 5px 10px;
+            }
+
+            .header-logo img {
+                width: 80px !important;
+            }
+
+            .header-action-item {
+                margin-left: 8px;
+            }
+
+            .header-action-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+
+            .header-action-badge {
+                min-width: 18px;
+                height: 18px;
+                font-size: 10px;
+                top: -6px;
+                right: -6px;
+            }
+
+            .tp-header-top-menu {
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 575px) {
+            .header-top-area {
+                padding: 5px 0;
+            }
+
+            .header-to-main {
+                padding: 0 8px;
+                justify-content: center;
+                gap: 15px;
+            }
+
+            .header-main-4 {
+                padding: 3px 8px;
+            }
+
+            .header-action-item {
+                margin-left: 5px;
+            }
+
+            .header-action-btn {
+                width: 34px;
+                height: 34px;
+                font-size: 15px;
+            }
+
+            .tp-header-top-menu {
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .link-text span {
+                display: none;
+            }
+
+            .link-text a {
+                font-size: 11px;
+            }
+
+            .header-lang-item a span {
+                display: inline !important;
+            }
+        }
+    </style>
+@endpush
+
+@push('scripts')
+    <script>
+        /**
+         * Simple Vanilla JS Dropdown Toggle
+         */
+        function toggleProfileMenu() {
+            const menu = document.getElementById('profileMenu');
+            if (menu) {
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+                console.log('✅ Profile menu toggled:', menu.style.display);
+            }
+        }
+
+        // Close menu saat klik di luar
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('profileMenu');
+            const btn = document.getElementById('profileBtn');
+
+            if (menu && btn) {
+                if (!menu.contains(e.target) && !btn.contains(e.target)) {
+                    menu.style.display = 'none';
+                }
+            }
+        });
+
+        // Close menu saat click item
+        document.addEventListener('DOMContentLoaded', function() {
+            const menu = document.getElementById('profileMenu');
+            if (menu) {
+                const links = menu.querySelectorAll('a');
+                links.forEach(link => {
+                    link.addEventListener('click', function() {
+                        menu.style.display = 'none';
+                    });
+                });
+            }
+        });
+
+        // Sticky header behavior
+        window.addEventListener('scroll', function() {
+            const header = document.getElementById('header-sticky');
+            if (header) {
+                if (window.scrollY > 50) {
+                    header.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                } else {
+                    header.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+                }
+            }
+        });
+    </script>
+@endpush

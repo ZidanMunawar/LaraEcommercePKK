@@ -148,14 +148,14 @@
                 </a>
                 <ul>
                     <li>
-                        <a href="{{ route('admin.chat') }}"
-                            class="{{ request()->routeIs('admin.chat') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.chat.index') }}"
+                            class="{{ request()->routeIs('admin.chat.*') ? 'mm-active' : '' }}">
                             <ion-icon name="chatbubble-outline"></ion-icon>Chat Pelanggan
                         </a>
                     </li>
                     <li>
-                        <a href="{{ route('admin.feedback') }}"
-                            class="{{ request()->routeIs('admin.feedback') ? 'mm-active' : '' }}">
+                        <a href="{{ route('admin.feedback.index') }}"
+                            class="{{ request()->routeIs('admin.feedback.*') ? 'mm-active' : '' }}">
                             <ion-icon name="thumbs-up-outline"></ion-icon>Feedback
                         </a>
                     </li>

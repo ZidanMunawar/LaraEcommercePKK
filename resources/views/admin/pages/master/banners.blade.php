@@ -1,8 +1,8 @@
 @extends('admin.layouts.mainLayout')
-@section('title', 'Banner')
+@section('title', 'Data Banner')
 
 @section('content')
-    <!--start breadcrumb-->
+    <!-- Breadcrumb -->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
         <div class="breadcrumb-title pe-3">Master Data</div>
         <div class="ps-3">
@@ -20,43 +20,41 @@
         <div class="ms-auto">
             @if ($banners->count() < 2)
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBannerModal">
-                    Add Banner
+                    <ion-icon name="add-circle-outline" class="align-middle"></ion-icon>
+                    Tambah Banner
                 </button>
             @else
                 <button type="button" class="btn btn-secondary" disabled title="Maksimal 2 banner sudah tercapai">
-                    Add Banner (Max 2)
+                    <ion-icon name="lock-closed-outline" class="align-middle"></ion-icon>
+                    Tambah Banner (Maks 2)
                 </button>
             @endif
         </div>
     </div>
-    <!--end breadcrumb-->
 
-    <!-- Display Alerts -->
+    <!-- Alert Sukses -->
     @if (session('success'))
-        <div class="alert alert-dismissible fade show py-2 bg-success">
+        <div class="alert alert-success alert-dismissible fade show">
             <div class="d-flex align-items-center">
-                <div class="fs-3 text-white">
-                    <ion-icon name="checkmark-circle-sharp"></ion-icon>
+                <div class="fs-4 text-success me-2">
+                    <ion-icon name="checkmark-circle"></ion-icon>
                 </div>
-                <div class="ms-3">
-                    <div class="text-white">{{ session('success') }}</div>
-                </div>
+                <div>{{ session('success') }}</div>
             </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
+    <!-- Alert Error -->
     @if (session('error'))
-        <div class="alert alert-dismissible fade show py-2 bg-danger">
+        <div class="alert alert-danger alert-dismissible fade show">
             <div class="d-flex align-items-center">
-                <div class="fs-3 text-white">
-                    <ion-icon name="close-circle-sharp"></ion-icon>
+                <div class="fs-4 text-danger me-2">
+                    <ion-icon name="alert-circle"></ion-icon>
                 </div>
-                <div class="ms-3">
-                    <div class="text-white">{{ session('error') }}</div>
-                </div>
+                <div>{{ session('error') }}</div>
             </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
@@ -93,28 +91,26 @@
 
                             <!-- Banner Details -->
                             <div class="mb-3">
-                                <div class="d-flex align-items-center mb-2 text-muted small">
+                                <div class="d-flex align-items-center mb-2" style="opacity: 0.7;">
                                     <ion-icon name="calendar-outline" class="me-2"></ion-icon>
-                                    <span><strong>Dibuat:</strong> {{ $banner->created_at->format('d M Y, H:i') }}</span>
+                                    <small><strong>Dibuat:</strong> {{ $banner->created_at->format('d M Y, H:i') }}</small>
                                 </div>
-                                <div class="d-flex align-items-center text-muted small">
+                                <div class="d-flex align-items-center" style="opacity: 0.7;">
                                     <ion-icon name="sync-outline" class="me-2"></ion-icon>
-                                    <span><strong>Diperbarui:</strong>
-                                        {{ $banner->updated_at->format('d M Y, H:i') }}</span>
+                                    <small><strong>Diperbarui:</strong>
+                                        {{ $banner->updated_at->format('d M Y, H:i') }}</small>
                                 </div>
                             </div>
 
                             <!-- Action Buttons -->
-                            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                                <!-- Edit Button -->
-                                <button type="button" class="btn btn-primary flex-fill" data-bs-toggle="modal"
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                                     data-bs-target="#editBannerModal{{ $banner->id }}">
-                                    <ion-icon name="pencil" class="align-middle"></ion-icon> Edit
+                                    <ion-icon name="pencil" class="align-middle"></ion-icon> Edit Banner
                                 </button>
-                                <!-- Delete Button -->
-                                <button type="button" class="btn btn-danger flex-fill" data-bs-toggle="modal"
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
                                     data-bs-target="#deleteBannerModal{{ $banner->id }}">
-                                    <ion-icon name="trash" class="align-middle"></ion-icon> Hapus
+                                    <ion-icon name="trash" class="align-middle"></ion-icon> Hapus Banner
                                 </button>
                             </div>
                         </div>
@@ -122,16 +118,15 @@
                 </div>
 
                 <!-- Preview Modal -->
-                <div class="modal fade" id="previewModal{{ $banner->id }}" tabindex="-1"
-                    aria-labelledby="previewModalLabel{{ $banner->id }}" aria-hidden="true">
+                <div class="modal fade" id="previewModal{{ $banner->id }}" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-xl">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="previewModalLabel{{ $banner->id }}">
-                                    Preview Banner - {{ $banner->promotion ?? 'No Title' }}
+                                <h5 class="modal-title">
+                                    <ion-icon name="eye-outline" class="align-middle"></ion-icon>
+                                    Preview Banner - {{ $banner->promotion ?? 'Tanpa Judul' }}
                                 </h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body text-center p-0">
                                 <img src="{{ asset('storage/' . $banner->image) }}"
@@ -147,14 +142,14 @@
                     </div>
                 </div>
 
-                <!-- Include Modals for Each Banner -->
+                <!-- Include Modals -->
                 @include('admin.modals.master.banners.edit', ['banner' => $banner])
                 @include('admin.modals.master.banners.delete', ['banner' => $banner])
             @endforeach
         </div>
 
         <!-- Info Banner Count -->
-        <div class="alert alert-info d-flex align-items-center" role="alert">
+        <div class="alert alert-info d-flex align-items-center">
             <ion-icon name="information-circle" class="fs-4 me-2"></ion-icon>
             <div>
                 Jumlah Banner: <strong>{{ $banners->count() }}/2</strong>
@@ -183,13 +178,14 @@
         </div>
     @endif
 
-    <!-- Include Add Banner Modal (hanya jika belum 2 banner) -->
+    <!-- Include Add Banner Modal -->
     @if ($banners->count() < 2)
         @include('admin.modals.master.banners.add')
     @endif
 
     <!-- Custom Styles -->
     <style>
+        /* Card hover effect */
         .card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
@@ -199,6 +195,7 @@
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
         }
 
+        /* Image zoom effect */
         .card img {
             transition: transform 0.3s ease;
         }
@@ -207,6 +204,7 @@
             transform: scale(1.05);
         }
 
+        /* Button hover effect */
         .btn {
             transition: all 0.3s ease;
         }
@@ -215,16 +213,7 @@
             transform: translateY(-2px);
         }
 
-        ion-icon {
-            vertical-align: middle;
-        }
-
-        .badge {
-            font-size: 0.85rem;
-            padding: 0.5rem 0.75rem;
-        }
-
-        /* Alert Animation */
+        /* Alert animation */
         .alert {
             animation: slideDown 0.3s ease-out;
         }
@@ -240,17 +229,12 @@
                 transform: translateY(0);
             }
         }
-
-        /* Modal image background */
-        .modal-body img {
-            background: repeating-conic-gradient(#f8f9fa 0% 25%, #e9ecef 0% 50%) 50% / 20px 20px;
-        }
     </style>
 
     <!-- Auto-close Alerts -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const alerts = document.querySelectorAll('.alert-success, .alert-danger');
+            const alerts = document.querySelectorAll('.alert');
             alerts.forEach(function(alert) {
                 setTimeout(function() {
                     const bsAlert = new bootstrap.Alert(alert);

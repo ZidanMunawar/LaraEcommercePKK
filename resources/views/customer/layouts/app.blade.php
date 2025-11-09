@@ -1,13 +1,15 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="id">
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>@yield('title', 'ZynHope Apparel - Fashion Store')</title>
-    <meta name="description" content="@yield('meta_description', 'ZynHope Apparel - Your Fashion Destination')">
+    <title>@yield('title', 'ZynHope - T-Shirt')</title>
+    <meta name="description" content="@yield('meta_description', 'ZynHope Apparel - Destinasi T-shirt anda')">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+
+
     <!-- Favicon -->
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets-customer/imgs/favicon.png') }}">
 
@@ -18,14 +20,25 @@
     <link rel="stylesheet" href="{{ asset('assets-customer/css/swiper.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets-customer/css/slick.css') }}">
     <link rel="stylesheet" href="{{ asset('assets-customer/css/magnific-popup.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets-customer/css/fontawesome-pro.css') }}">
     <link rel="stylesheet" href="{{ asset('assets-customer/css/spacing.css') }}">
     <link rel="stylesheet" href="{{ asset('assets-customer/css/main.css') }}">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+
+    {{-- <!-- PACE Loading -->
+    <link href="{{ asset('assets/css/pace.min.css') }}" rel="stylesheet" /> --}}
 
     @stack('styles')
 </head>
 
 <body>
+
+    {{-- <!-- PACE Loading -->
+    <div data-role="page">
+        <div data-role="header"></div>
+    </div>
 
     <!-- Preloader -->
     <div id="preloader">
@@ -41,14 +54,63 @@
                 <span class="bd-loader-item"></span>
             </div>
         </div>
-    </div>
+    </div> --}}
 
-    <!-- Back to top -->
-    <div class="backtotop-wrap cursor-pointer">
-        <svg class="backtotop-circle svg-content" width="100%" height="100%" viewBox="-1 -1 102 102">
-            <path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98" />
-        </svg>
-    </div>
+    <!-- Back to Top Button with Bootstrap Icon (Inline) -->
+    <button type="button" class="btn-back-to-top" id="backToTopBtn" title="Kembali ke Atas"
+        style="position: fixed;
+               bottom: 30px;
+               right: 30px;
+               width: 50px;
+               height: 50px;
+               border-radius: 50%;
+               background: linear-gradient(135deg, #b4916c, #a67f55);
+               border: none;
+               box-shadow: 0 4px 15px rgba(0, 0, 0, 0.13);
+               color: #fff;
+               align-items: center;
+               justify-content: center;
+               display: none;
+               z-index: 999;
+               cursor: pointer;
+               transition: all 0.3s ease;">
+        <i class="bi bi-arrow-up-short" style="font-size: 28px; vertical-align: middle;"></i>
+    </button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const backToTopBtn = document.getElementById('backToTopBtn');
+
+            // Show button saat scroll > 250px
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 250) {
+                    backToTopBtn.style.display = 'flex';
+                } else {
+                    backToTopBtn.style.display = 'none';
+                }
+            });
+
+            // Smooth scroll ke atas
+            backToTopBtn.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+
+            // Hover effect
+            backToTopBtn.addEventListener('mouseenter', function() {
+                this.style.background = 'linear-gradient(135deg, #a67f55, #b4916c)';
+                this.style.transform = 'translateY(-5px) scale(1.1)';
+            });
+
+            backToTopBtn.addEventListener('mouseleave', function() {
+                this.style.background = 'linear-gradient(135deg, #b4916c, #a67f55)';
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+    </script>
+
 
     <!-- Search Area -->
     <div class="df-search-area">
@@ -57,12 +119,14 @@
                 <div class="col-xl-12">
                     <div class="df-search-form">
                         <div class="df-search-close text-center mb-20">
-                            <button class="df-search-close-btn df-search-close-btn"></button>
+                            <button class="df-search-close-btn">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
                         </div>
-                        <form action="#">
+                        <form action="{{ route('customer.products') }}" method="GET">
                             <div class="df-search-input mb-10">
-                                <input type="text" placeholder="Search for product...">
-                                <button type="submit"><i class="flaticon-search-1"></i></button>
+                                <input type="text" name="search" placeholder="Cari produk...">
+                                <button type="submit"><i class="bi bi-search"></i></button>
                             </div>
                         </form>
                     </div>
@@ -85,8 +149,9 @@
 
     <!-- Footer -->
     @include('customer.layouts.footer')
+
     <!-- JS -->
-    <script src="{{ asset('assets/js/jQuery 3.5.1.min.js') }}"></script>
+    <script src="{{ asset('assets/js/pace.min.js') }}"></script>
     <script src="{{ asset('assets-customer/js/jquery-3.6.0.min.js') }}"></script>
     <script src="{{ asset('assets-customer/js/waypoints.min.js') }}"></script>
     <script src="{{ asset('assets-customer/js/bootstrap.bundle.min.js') }}"></script>
@@ -97,6 +162,11 @@
     <script src="{{ asset('assets-customer/js/counterup.js') }}"></script>
     <script src="{{ asset('assets-customer/js/wow.js') }}"></script>
     <script src="{{ asset('assets-customer/js/ajax-form.js') }}"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Custom JS -->
     <script src="{{ asset('assets-customer/js/main.js') }}"></script>
 
     @stack('scripts')

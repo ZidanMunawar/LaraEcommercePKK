@@ -20,11 +20,11 @@ class Customer extends Authenticatable
         'email',
         'no_telp',
         'alamat',
-        'province_name',      // ✅ TAMBAH
-        'regency_name',       // ✅ TAMBAH
-        'district_name',      // ✅ TAMBAH
-        'village_name',       // ✅ TAMBAH
-        'postal_code',        // ✅ TAMBAH
+        'province_name',
+        'regency_name',
+        'district_name',
+        'village_name',
+        'postal_code',
     ];
 
     // Accessor untuk alamat lengkap
@@ -77,4 +77,18 @@ class Customer extends Authenticatable
     // {
     //     return $this->hasMany(ShippingAddress::class, 'id_customers', 'id_customers');
     // }
+
+    public function chatRooms()
+    {
+        return $this->hasMany(ChatRoom::class, 'id_customers', 'id_customers');
+    }
+
+    public function chatMessages()
+    {
+        return $this->hasMany(ChatMessage::class, 'sender_id', 'id_customers')
+            ->where('sender_type', 'customer');
+
+    }
+
+
 }

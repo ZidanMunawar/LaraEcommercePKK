@@ -1,10 +1,10 @@
 @extends('admin.layouts.mainLayout')
-@section('title', 'Edit Product')
+@section('title', 'Edit Produk')
 
 @section('content')
-    <!--start breadcrumb-->
+    <!-- Breadcrumb -->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
-        <div class="breadcrumb-title pe-3">Products</div>
+        <div class="breadcrumb-title pe-3">Produk</div>
         <div class="ps-3">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 p-0 align-items-center">
@@ -14,31 +14,43 @@
                         </a>
                     </li>
                     <li class="breadcrumb-item">
-                        <a href="{{ route('admin.products.index') }}">Products</a>
+                        <a href="{{ route('admin.products.index') }}">Produk</a>
                     </li>
-                    <li class="breadcrumb-item active" aria-current="page">Edit Product</li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Produk</li>
                 </ol>
             </nav>
         </div>
         <div class="ms-auto">
             <a href="{{ route('admin.products.index') }}" class="btn btn-secondary">
                 <ion-icon name="arrow-back" class="align-middle me-1"></ion-icon>
-                Back to Products
+                Kembali
             </a>
         </div>
     </div>
-    <!--end breadcrumb-->
 
-    <!-- Display Alerts -->
+    <!-- Alert Error -->
     @if (session('error'))
-        <div class="alert alert-dismissible fade show py-2 bg-danger">
+        <div class="alert alert-danger alert-dismissible fade show">
             <div class="d-flex align-items-center">
-                <div class="fs-3 text-white"><ion-icon name="close-circle-sharp"></ion-icon></div>
-                <div class="ms-3">
-                    <div class="text-white">{{ session('error') }}</div>
+                <div class="fs-4 text-danger me-2">
+                    <ion-icon name="close-circle"></ion-icon>
                 </div>
+                <div>{{ session('error') }}</div>
             </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    <!-- Alert Success -->
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show">
+            <div class="d-flex align-items-center">
+                <div class="fs-4 text-success me-2">
+                    <ion-icon name="checkmark-circle"></ion-icon>
+                </div>
+                <div>{{ session('success') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
@@ -47,85 +59,86 @@
         @method('PUT')
 
         <div class="row">
-            <!-- Left Column - Main Info -->
+            <!-- KOLOM KIRI - Informasi Utama -->
             <div class="col-lg-8">
-                <!-- Basic Information -->
+                <!-- Informasi Dasar -->
                 <div class="card mb-3">
                     <div class="card-header bg-primary text-white">
                         <h5 class="mb-0">
                             <ion-icon name="information-circle" class="align-middle me-2"></ion-icon>
-                            Basic Information
+                            Informasi Dasar
                         </h5>
                     </div>
                     <div class="card-body">
-                        <!-- Product Name -->
+                        <!-- Nama Produk -->
                         <div class="mb-3">
-                            <label for="name" class="form-label">Product Name <span class="text-danger">*</span></label>
+                            <label for="name" class="form-label">Nama Produk <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
-                                name="name" value="{{ old('name', $product->name) }}" placeholder="Enter product name"
+                                name="name" value="{{ old('name', $product->name) }}" placeholder="Masukkan nama produk"
                                 required>
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <!-- Description -->
+                        <!-- Deskripsi -->
                         <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
+                            <label for="description" class="form-label">Deskripsi Produk</label>
                             <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description"
-                                rows="5" placeholder="Enter product description">{{ old('description', $product->description) }}</textarea>
+                                rows="5" placeholder="Masukkan deskripsi produk...">{{ old('description', $product->description) }}</textarea>
                             @error('description')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                            <small class="text-muted">Jelaskan detail produk, fitur, dan keunggulan</small>
                         </div>
 
-                        <!-- Price & Old Price -->
+                        <!-- Harga & Harga Lama -->
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="price" class="form-label">Price (Rp) <span
+                                <label for="price" class="form-label">Harga (Rp) <span
                                         class="text-danger">*</span></label>
                                 <input type="number" class="form-control @error('price') is-invalid @enderror"
-                                    id="price" name="price" value="{{ old('price', $product->price) }}" step="0.01"
-                                    min="0" placeholder="0" required>
+                                    id="price" name="price" value="{{ old('price', $product->price) }}"
+                                    step="0.01" min="0" placeholder="100000" required>
                                 @error('price')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="col-md-6 mb-3">
-                                <label for="old_price" class="form-label">Old Price (Rp) <small
-                                        class="text-muted">(Optional)</small></label>
+                                <label for="old_price" class="form-label">
+                                    Harga Lama (Rp) <span class="text-muted">(Opsional)</span>
+                                </label>
                                 <input type="number" class="form-control @error('old_price') is-invalid @enderror"
                                     id="old_price" name="old_price" value="{{ old('old_price', $product->old_price) }}"
-                                    step="0.01" min="0" placeholder="0">
+                                    step="0.01" min="0" placeholder="150000">
                                 @error('old_price')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
-                                <small class="text-muted">Leave empty if no discount</small>
+                                <small class="text-muted">Kosongkan jika tidak ada diskon</small>
                             </div>
                         </div>
 
-                        <!-- Quantity -->
+                        <!-- Stok -->
                         <div class="mb-3">
-                            <label for="quantity" class="form-label">Stock Quantity <span
-                                    class="text-danger">*</span></label>
+                            <label for="quantity" class="form-label">Jumlah Stok <span class="text-danger">*</span></label>
                             <input type="number" class="form-control @error('quantity') is-invalid @enderror"
                                 id="quantity" name="quantity" value="{{ old('quantity', $product->quantity) }}"
                                 min="0" placeholder="0" required>
                             @error('quantity')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                            <small class="text-muted">Jumlah stok produk yang tersedia</small>
                         </div>
 
-                        <!-- Di dalam card Basic Information, ganti bagian Promotion Text dengan ini: -->
-
-                        <!-- Promotion -->
+                        <!-- Promosi -->
                         <div class="mb-3">
-                            <label for="promotion_id" class="form-label">Promotion <small
-                                    class="text-muted">(Optional)</small></label>
+                            <label for="promotion_id" class="form-label">
+                                Promosi <span class="text-muted">(Opsional)</span>
+                            </label>
                             <select class="form-select @error('promotion_id') is-invalid @enderror" id="promotion_id"
                                 name="promotion_id">
-                                <option value="">-- No Promotion --</option>
+                                <option value="">-- Tidak Ada Promosi --</option>
                                 @foreach ($promotions as $promotion)
                                     <option value="{{ $promotion->id }}"
                                         {{ old('promotion_id', $product->promotion_id) == $promotion->id ? 'selected' : '' }}>
@@ -136,45 +149,49 @@
                             @error('promotion_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                            <small class="text-muted">Select a promotion tag for this product</small>
+                            <small class="text-muted">Pilih label promosi untuk produk (Flash Sale, New Arrival,
+                                dll)</small>
                         </div>
                     </div>
                 </div>
 
-                <!-- Product Images -->
+                <!-- Gambar Produk -->
                 <div class="card mb-3">
                     <div class="card-header bg-info text-white">
                         <h5 class="mb-0">
                             <ion-icon name="images" class="align-middle me-2"></ion-icon>
-                            Product Images
+                            Gambar Produk
                         </h5>
                     </div>
                     <div class="card-body">
-                        <!-- Existing Images -->
+                        <!-- Gambar yang Ada -->
                         <div class="mb-3">
-                            <label class="form-label">Current Images</label>
+                            <label class="form-label">Gambar Saat Ini</label>
                             <div class="row g-2" id="existingImages">
                                 @foreach ($product->images as $image)
                                     <div class="col-6 col-md-4 col-lg-3 image-item" data-image-id="{{ $image->id }}">
                                         <div class="position-relative">
                                             @if ($image->is_primary)
-                                                <span
-                                                    class="position-absolute top-0 start-0 m-2 badge bg-primary">Primary</span>
+                                                <span class="position-absolute top-0 start-0 m-2 badge bg-primary">
+                                                    <ion-icon name="star"></ion-icon> Utama
+                                                </span>
                                             @endif
                                             <button type="button"
                                                 class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 delete-image-btn"
-                                                data-image-id="{{ $image->id }}">
+                                                data-image-id="{{ $image->id }}"
+                                                data-image-url="{{ asset('storage/' . $image->image_url) }}"
+                                                title="Hapus gambar">
                                                 <ion-icon name="trash"></ion-icon>
                                             </button>
-                                            <img src="{{ asset('storage/' . $image->image_url) }}" alt="Product Image"
+                                            <img src="{{ asset('storage/' . $image->image_url) }}" alt="Gambar Produk"
                                                 class="img-fluid rounded"
-                                                style="width: 100%; height: 150px; object-fit: cover; border: 2px solid #ddd;">
+                                                style="width: 100%; height: 150px; object-fit: cover; border: 3px solid #ddd;">
                                             <div class="form-check mt-2">
                                                 <input class="form-check-input" type="radio" name="primary_image"
                                                     value="{{ $image->id }}" id="primary_{{ $image->id }}"
                                                     {{ $image->is_primary ? 'checked' : '' }}>
                                                 <label class="form-check-label" for="primary_{{ $image->id }}">
-                                                    Set as Primary
+                                                    Jadikan Utama
                                                 </label>
                                             </div>
                                         </div>
@@ -183,11 +200,11 @@
                             </div>
                         </div>
 
-                        <!-- Add New Images -->
+                        <!-- Tambah Gambar Baru -->
                         <div class="mb-3">
-                            <label class="form-label">Add New Images <small class="text-muted">(Optional, Max
-                                    total
-                                    10)</small></label>
+                            <label class="form-label">
+                                Tambah Gambar Baru <span class="text-muted">(Opsional, Maks total 10)</span>
+                            </label>
                             <input type="file"
                                 class="form-control @error('new_images') is-invalid @enderror @error('new_images.*') is-invalid @enderror"
                                 id="new_images" name="new_images[]" accept="image/*" multiple>
@@ -197,28 +214,29 @@
                             @error('new_images.*')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                            <small class="text-muted">Current: {{ $product->images->count() }} images. You can add
-                                more up
-                                to 10 total.</small>
+                            <small class="text-muted">
+                                <ion-icon name="information-circle-outline"></ion-icon>
+                                Saat ini: {{ $product->images->count() }} gambar. Dapat menambah sampai total 10 gambar.
+                            </small>
                         </div>
 
-                        <!-- New Image Preview -->
+                        <!-- Preview Gambar Baru -->
                         <div id="newImagePreview" class="row g-2"></div>
                     </div>
                 </div>
 
-                <!-- Product Attributes -->
+                <!-- Atribut Produk -->
                 <div class="card mb-3">
                     <div class="card-header bg-success text-white">
                         <h5 class="mb-0">
                             <ion-icon name="pricetags" class="align-middle me-2"></ion-icon>
-                            Product Attributes
+                            Atribut Produk
                         </h5>
                     </div>
                     <div class="card-body">
-                        <!-- Categories -->
+                        <!-- Kategori -->
                         <div class="mb-3">
-                            <label class="form-label">Categories <span class="text-danger">*</span></label>
+                            <label class="form-label">Kategori <span class="text-danger">*</span></label>
                             <div class="tags-input-container">
                                 <div class="tags-input @error('categories') is-invalid @enderror" id="categories-tags">
                                     @foreach ($categories as $category)
@@ -233,11 +251,12 @@
                             @error('categories')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
+                            <small class="text-muted">Pilih minimal 1 kategori</small>
                         </div>
 
-                        <!-- Colors -->
+                        <!-- Warna -->
                         <div class="mb-3">
-                            <label class="form-label">Colors <span class="text-danger">*</span></label>
+                            <label class="form-label">Warna <span class="text-danger">*</span></label>
                             <div class="tags-input-container">
                                 <div class="tags-input @error('colors') is-invalid @enderror" id="colors-tags">
                                     @foreach ($colors as $color)
@@ -256,11 +275,12 @@
                             @error('colors')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
+                            <small class="text-muted">Pilih minimal 1 warna</small>
                         </div>
 
-                        <!-- Sizes -->
+                        <!-- Ukuran -->
                         <div class="mb-3">
-                            <label class="form-label">Sizes <span class="text-danger">*</span></label>
+                            <label class="form-label">Ukuran <span class="text-danger">*</span></label>
                             <div class="tags-input-container">
                                 <div class="tags-input @error('sizes') is-invalid @enderror" id="sizes-tags">
                                     @foreach ($sizes as $size)
@@ -275,11 +295,12 @@
                             @error('sizes')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
+                            <small class="text-muted">Pilih minimal 1 ukuran</small>
                         </div>
 
-                        <!-- Tags -->
+                        <!-- Tag -->
                         <div class="mb-3">
-                            <label class="form-label">Tags <span class="text-danger">*</span></label>
+                            <label class="form-label">Tag <span class="text-danger">*</span></label>
                             <div class="tags-input-container">
                                 <div class="tags-input @error('tags') is-invalid @enderror" id="tags-tags">
                                     @foreach ($tags as $tag)
@@ -294,11 +315,12 @@
                             @error('tags')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
+                            <small class="text-muted">Pilih minimal 1 tag</small>
                         </div>
 
-                        <!-- Audiences -->
+                        <!-- Audience -->
                         <div class="mb-3">
-                            <label class="form-label">Audiences <span class="text-danger">*</span></label>
+                            <label class="form-label">Target Audience <span class="text-danger">*</span></label>
                             <div class="tags-input-container">
                                 <div class="tags-input @error('audiences') is-invalid @enderror" id="audiences-tags">
                                     @foreach ($audiences as $audience)
@@ -313,19 +335,20 @@
                             @error('audiences')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
+                            <small class="text-muted">Pilih minimal 1 target audience</small>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column - Status & Actions -->
+            <!-- KOLOM KANAN - Status & Aksi -->
             <div class="col-lg-4">
-                <!-- Product Status -->
+                <!-- Status Produk -->
                 <div class="card mb-3">
                     <div class="card-header bg-warning">
                         <h5 class="mb-0">
                             <ion-icon name="toggle" class="align-middle me-2"></ion-icon>
-                            Product Status
+                            Status Produk
                         </h5>
                     </div>
                     <div class="card-body">
@@ -333,8 +356,8 @@
                             <input class="form-check-input" type="checkbox" id="is_available" name="is_available"
                                 value="1" {{ old('is_available', $product->is_available) ? 'checked' : '' }}>
                             <label class="form-check-label" for="is_available">
-                                <strong>Available for Sale</strong>
-                                <br><small class="text-muted">Product can be purchased</small>
+                                <strong>Tersedia Untuk Dijual</strong>
+                                <br><small class="text-muted">Produk dapat dibeli customer</small>
                             </label>
                         </div>
 
@@ -342,8 +365,8 @@
                             <input class="form-check-input" type="checkbox" id="is_new" name="is_new"
                                 value="1" {{ old('is_new', $product->is_new) ? 'checked' : '' }}>
                             <label class="form-check-label" for="is_new">
-                                <strong>Mark as New</strong>
-                                <br><small class="text-muted">Show "New" badge</small>
+                                <strong>Tandai Sebagai Baru</strong>
+                                <br><small class="text-muted">Tampilkan badge "Baru"</small>
                             </label>
                         </div>
 
@@ -351,8 +374,8 @@
                             <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured"
                                 value="1" {{ old('is_featured', $product->is_featured) ? 'checked' : '' }}>
                             <label class="form-check-label" for="is_featured">
-                                <strong>Featured Product</strong>
-                                <br><small class="text-muted">Show on homepage</small>
+                                <strong>Produk Unggulan</strong>
+                                <br><small class="text-muted">Tampilkan di halaman utama</small>
                             </label>
                         </div>
 
@@ -361,44 +384,48 @@
                                 value="1" {{ old('is_best_seller', $product->is_best_seller) ? 'checked' : '' }}>
                             <label class="form-check-label" for="is_best_seller">
                                 <strong>Best Seller</strong>
-                                <br><small class="text-muted">Show "Best Seller" badge</small>
+                                <br><small class="text-muted">Tampilkan badge "Terlaris"</small>
                             </label>
                         </div>
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="card">
+                <!-- Tombol Aksi -->
+                <div class="card mb-3">
                     <div class="card-body">
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <ion-icon name="save" class="align-middle me-2"></ion-icon>
-                                Update Product
+                                Perbarui Produk
                             </button>
                             <a href="{{ route('admin.products.index') }}" class="btn btn-secondary btn-lg">
                                 <ion-icon name="close" class="align-middle me-2"></ion-icon>
-                                Cancel
+                                Batal
                             </a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Product Info -->
-                <div class="card mt-3">
+                <!-- Info Produk -->
+                <div class="card">
                     <div class="card-header bg-light">
                         <h6 class="mb-0">
                             <ion-icon name="information-circle" class="align-middle me-1"></ion-icon>
-                            Product Info
+                            Informasi Produk
                         </h6>
                     </div>
                     <div class="card-body">
                         <small>
-                            <p class="mb-2"><strong>Created:</strong>
-                                {{ $product->created_at->format('d M Y, H:i') }}
+                            <p class="mb-2">
+                                <strong>Dibuat:</strong>
+                                <br>{{ $product->created_at->format('d M Y, H:i') }}
                             </p>
-                            <p class="mb-2"><strong>Last Updated:</strong>
-                                {{ $product->updated_at->format('d M Y, H:i') }}</p>
-                            <p class="mb-0"><strong>Total Images:</strong> {{ $product->images->count() }} / 10
+                            <p class="mb-2">
+                                <strong>Terakhir Diubah:</strong>
+                                <br>{{ $product->updated_at->format('d M Y, H:i') }}
+                            </p>
+                            <p class="mb-0">
+                                <strong>Total Gambar:</strong> {{ $product->images->count() }} / 10
                             </p>
                         </small>
                     </div>
@@ -407,12 +434,52 @@
         </div>
     </form>
 
-    <!-- Styles -->
+    <!-- MODAL KONFIRMASI HAPUS GAMBAR -->
+    <div class="modal fade" id="deleteImageModal" tabindex="-1" aria-labelledby="deleteImageModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteImageModalLabel">
+                        <ion-icon name="warning" class="align-middle me-2"></ion-icon>
+                        Konfirmasi Hapus Gambar
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-3">
+                        <ion-icon name="trash" style="font-size: 64px; color: #dc3545;"></ion-icon>
+                    </div>
+                    <h5 class="mb-3">Apakah Anda yakin ingin menghapus gambar ini?</h5>
+                    <div class="mb-3">
+                        <img id="deleteImagePreview" src="" alt="Preview Gambar"
+                            class="img-fluid rounded shadow" style="max-height: 200px;">
+                    </div>
+                    <p class="text-muted mb-0">Tindakan ini tidak dapat dibatalkan!</p>
+                    <input type="hidden" id="deleteImageId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <ion-icon name="close" class="align-middle me-1"></ion-icon>
+                        Batal
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteImage">
+                        <ion-icon name="trash" class="align-middle me-1"></ion-icon>
+                        Ya, Hapus Gambar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CSS STYLES -->
     <style>
+        /* Container tag input */
         .tags-input-container {
             border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
+            border-radius: 8px;
+            padding: 12px;
             background: #f8f9fa;
         }
 
@@ -422,6 +489,7 @@
             gap: 8px;
         }
 
+        /* Style untuk setiap tag item */
         .tag-item {
             display: inline-block;
             margin: 0;
@@ -434,48 +502,84 @@
 
         .tag-item .tag-label {
             display: inline-block;
-            padding: 6px 12px;
+            padding: 8px 16px;
             background: #fff;
             border: 2px solid #ddd;
             border-radius: 20px;
             font-size: 14px;
-            transition: all 0.2s;
+            transition: all 0.3s;
             user-select: none;
         }
 
+        /* Style saat tag dipilih */
         .tag-item input[type="checkbox"]:checked+.tag-label {
             background: #0d6efd;
             color: white;
             border-color: #0d6efd;
+            transform: scale(1.05);
         }
 
         .tag-item:hover .tag-label {
             border-color: #0d6efd;
+            transform: scale(1.05);
         }
 
+        /* Box warna */
         .color-box {
             display: inline-block;
-            width: 16px;
-            height: 16px;
-            border-radius: 3px;
-            border: 1px solid #ddd;
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 1px #ddd;
             vertical-align: middle;
-            margin-right: 5px;
+            margin-right: 6px;
         }
 
+        /* Warna tag khusus warna */
         .color-tag input[type="checkbox"]:checked+.tag-label {
             background: #28a745;
             border-color: #28a745;
         }
 
+        /* Tombol hapus gambar */
         .delete-image-btn {
             z-index: 10;
+            padding: 4px 8px;
+        }
+
+        /* Hover effect pada gambar */
+        .image-item img {
+            transition: transform 0.3s;
+        }
+
+        .image-item:hover img {
+            transform: scale(1.05);
+        }
+
+        /* Modal styling */
+        .modal-content {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            border-bottom: none;
+        }
+
+        .modal-footer {
+            border-top: none;
+            justify-content: center;
+        }
+
+        #deleteImagePreview {
+            border: 3px solid #dc3545;
         }
     </style>
 
-    <!-- Scripts -->
+    <!-- JAVASCRIPT -->
     <script>
-        // New Image Preview
+        // Preview gambar baru yang diupload
         document.getElementById('new_images').addEventListener('change', function(e) {
             const preview = document.getElementById('newImagePreview');
             preview.innerHTML = '';
@@ -483,13 +587,14 @@
             const files = Array.from(e.target.files);
             const currentCount = {{ $product->images->count() }};
 
+            // Validasi total gambar tidak lebih dari 10
             if (currentCount + files.length > 10) {
-                alert('Total images cannot exceed 10! Current: ' + currentCount);
+                alert('Total gambar tidak boleh lebih dari 10! Saat ini: ' + currentCount + ' gambar');
                 e.target.value = '';
                 return;
             }
 
-            files.forEach((file) => {
+            files.forEach((file, index) => {
                 if (file.type.startsWith('image/')) {
                     const reader = new FileReader();
 
@@ -499,10 +604,15 @@
 
                         col.innerHTML = `
                             <div class="position-relative">
-                                <img src="${e.target.result}" alt="New Image"
+                                <img src="${e.target.result}" alt="Gambar Baru"
                                      class="img-fluid rounded"
-                                     style="width: 100%; height: 150px; object-fit: cover; border: 2px solid #28a745;">
-                                <span class="position-absolute top-0 start-0 m-2 badge bg-success">New</span>
+                                     style="width: 100%; height: 150px; object-fit: cover; border: 3px solid #28a745;">
+                                <span class="position-absolute top-0 start-0 m-2 badge bg-success">
+                                    <ion-icon name="add-circle"></ion-icon> Baru
+                                </span>
+                                <span class="position-absolute top-0 end-0 m-2 badge bg-dark">
+                                    ${currentCount + index + 1}
+                                </span>
                             </div>
                         `;
 
@@ -514,46 +624,110 @@
             });
         });
 
-        // Delete Image
+        // Inisialisasi modal Bootstrap
+        let deleteImageModal;
+        document.addEventListener('DOMContentLoaded', function() {
+            deleteImageModal = new bootstrap.Modal(document.getElementById('deleteImageModal'));
+        });
+
+        // Buka modal konfirmasi hapus gambar
         document.querySelectorAll('.delete-image-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                if (!confirm('Are you sure you want to delete this image?')) {
-                    return;
-                }
-
                 const imageId = this.getAttribute('data-image-id');
-                const imageItem = this.closest('.image-item');
+                const imageUrl = this.getAttribute('data-image-url');
 
-                fetch(`/admin/products/image/${imageId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json',
-                        },
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            imageItem.remove();
-                            alert(data.message);
+                // Set data ke modal
+                document.getElementById('deleteImageId').value = imageId;
+                document.getElementById('deleteImagePreview').src = imageUrl;
 
-                            // Reload if needed
-                            const remainingImages = document.querySelectorAll('.image-item').length;
-                            if (remainingImages === 0) {
-                                location.reload();
-                            }
-                        } else {
-                            alert(data.message);
-                        }
-                    })
-                    .catch(error => {
-                        alert('Error deleting image');
-                        console.error('Error:', error);
-                    });
+                // Tampilkan modal
+                deleteImageModal.show();
             });
         });
 
-        // Auto close alerts
+        // Konfirmasi hapus gambar
+        document.getElementById('confirmDeleteImage').addEventListener('click', function() {
+            const imageId = document.getElementById('deleteImageId').value;
+            const imageItem = document.querySelector(`.image-item[data-image-id="${imageId}"]`);
+            const confirmBtn = this;
+
+            // Disable button dan tambahkan loading
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghapus...';
+
+            // Kirim request delete via AJAX
+            fetch(`/admin/products/image/${imageId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Hapus elemen gambar dari DOM
+                        imageItem.remove();
+
+                        // Tutup modal
+                        deleteImageModal.hide();
+
+                        // Tampilkan alert success
+                        showAlert('success', data.message);
+
+                        // Reload jika tidak ada gambar tersisa
+                        const remainingImages = document.querySelectorAll('.image-item').length;
+                        if (remainingImages === 0) {
+                            setTimeout(function() {
+                                alert('Minimal harus ada 1 gambar produk!');
+                                location.reload();
+                            }, 1000);
+                        }
+                    } else {
+                        deleteImageModal.hide();
+                        showAlert('danger', data.message);
+                    }
+                })
+                .catch(error => {
+                    deleteImageModal.hide();
+                    showAlert('danger', 'Terjadi kesalahan saat menghapus gambar');
+                    console.error('Error:', error);
+                })
+                .finally(() => {
+                    // Reset button
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML =
+                        '<ion-icon name="trash" class="align-middle me-1"></ion-icon>Ya, Hapus Gambar';
+                });
+        });
+
+        // Function untuk menampilkan alert
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="fs-4 text-${type} me-2">
+                        <ion-icon name="${type === 'success' ? 'checkmark-circle' : 'close-circle'}"></ion-icon>
+                    </div>
+                    <div>${message}</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+
+            // Insert alert di awal content
+            const content = document.querySelector('.page-breadcrumb').parentElement;
+            content.insertBefore(alertDiv, content.firstChild);
+
+            // Auto close setelah 5 detik
+            setTimeout(function() {
+                const bsAlert = new bootstrap.Alert(alertDiv);
+                bsAlert.close();
+            }, 5000);
+        }
+
+        // Auto close alerts yang sudah ada
         document.addEventListener('DOMContentLoaded', function() {
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(function(alert) {

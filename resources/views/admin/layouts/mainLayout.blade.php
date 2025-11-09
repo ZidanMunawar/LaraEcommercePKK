@@ -27,6 +27,7 @@
     <link href="{{ asset('assets/css/semi-dark.css') }}" rel="stylesheet" />
     <link href="{{ asset('assets/css/header-colors.css') }}" rel="stylesheet" />
 
+
     <title>@yield('title', 'Dashboard') - ZynHope</title>
 </head>
 

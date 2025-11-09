@@ -1,10 +1,10 @@
 @extends('admin.layouts.mainLayout')
-@section('title', 'Transactions Management')
+@section('title', 'Kelola Transaksi')
 
 @section('content')
-    <!--start breadcrumb-->
+    <!-- Breadcrumb -->
     <div class="page-breadcrumb d-none d-sm-flex align-items-center mb-3">
-        <div class="breadcrumb-title pe-3">Transaction Management</div>
+        <div class="breadcrumb-title pe-3">Manajemen Transaksi</div>
         <div class="ps-3">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-0 p-0 align-items-center">
@@ -13,17 +13,17 @@
                             <ion-icon name="home-sharp"></ion-icon>
                         </a>
                     </li>
-                    <li class="breadcrumb-item active" aria-current="page">Transactions</li>
+                    <li class="breadcrumb-item active" aria-current="page">Transaksi</li>
                 </ol>
             </nav>
         </div>
         <div class="ms-auto">
-            <button type="button" class="btn btn-success" id="exportBtn" onclick="handleExport()">
-                <ion-icon name="download-outline"></ion-icon> Export
-            </button>
+            {{-- <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exportModal">
+                <ion-icon name="download-outline" class="align-middle"></ion-icon>
+                Export
+            </button> --}}
         </div>
     </div>
-    <!--end breadcrumb-->
 
     <!-- Statistics Cards -->
     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 mb-3">
@@ -95,34 +95,39 @@
         </div>
     </div>
 
-    <!-- Transactions Table -->
+    <!-- Tabel Transaksi -->
     <div class="card">
         <div class="card-body">
             <div class="d-flex align-items-center mb-3">
-                <h5 class="mb-0">All Transactions</h5>
+                <h5 class="mb-0">Semua Transaksi</h5>
                 <div class="ms-auto">
                     <form method="GET" class="d-flex gap-2">
+                        <!-- Filter Status -->
                         <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-                            <option value="">All Status</option>
-                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Processing
+                            <option value="">Semua Status</option>
+                            <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Menunggu</option>
+                            <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Diproses
                             </option>
-                            <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Shipped</option>
-                            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Completed
+                            <option value="shipped" {{ request('status') == 'shipped' ? 'selected' : '' }}>Dikirim</option>
+                            <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>Selesai
                             </option>
-                            <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled
+                            <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Dibatalkan
                             </option>
                         </select>
+
+                        <!-- Filter Payment -->
                         <select name="payment_status" class="form-select form-select-sm" onchange="this.form.submit()">
-                            <option value="">All Payment</option>
-                            <option value="pending" {{ request('payment_status') == 'pending' ? 'selected' : '' }}>Pending
+                            <option value="">Semua Pembayaran</option>
+                            <option value="pending" {{ request('payment_status') == 'pending' ? 'selected' : '' }}>Menunggu
                             </option>
-                            <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>Paid
+                            <option value="paid" {{ request('payment_status') == 'paid' ? 'selected' : '' }}>Lunas
                             </option>
-                            <option value="failed" {{ request('payment_status') == 'failed' ? 'selected' : '' }}>Failed
+                            <option value="failed" {{ request('payment_status') == 'failed' ? 'selected' : '' }}>Gagal
                             </option>
                         </select>
-                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Search..."
+
+                        <!-- Search -->
+                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Cari..."
                             value="{{ request('search') }}">
                         <button type="submit" class="btn btn-sm btn-primary">
                             <ion-icon name="search-outline"></ion-icon>
@@ -130,33 +135,42 @@
                     </form>
                 </div>
             </div>
+
+
+            <!-- TABLE UTAMA TRANSAKSI -->
             <div class="table-responsive">
                 <table class="table align-middle table-hover">
-                    <thead class="table-secondary">
+                    <thead class="table-light">
                         <tr>
-                            <th>Order ID</th>
+                            <th>ID Transaksi</th>
                             <th>Customer</th>
-                            <th>Date</th>
+                            <th>Tanggal</th>
                             <th>Total</th>
-                            <th>Payment</th>
+                            <th>Pembayaran</th>
                             <th>Status</th>
-                            <th>Actions</th>
+                            <th>Approved By</th>
+                            <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($transactions as $transaction)
                             <tr>
                                 <td>
-                                    <strong>#{{ str_pad($transaction->id_transaksi, 6, '0', STR_PAD_LEFT) }}</strong>
+                                    <strong>
+                                        {{ $transaction->transaction_id ?? '#' . str_pad($transaction->id_transaksi, 6, '0', STR_PAD_LEFT) }}
+                                    </strong>
                                     @if ($transaction->resi_number)
-                                        <br><small class="text-muted">Resi: {{ $transaction->resi_number }}</small>
+                                        <br><small style="opacity: 0.7;">Resi: {{ $transaction->resi_number }}</small>
                                     @endif
                                 </td>
                                 <td>
                                     {{ $transaction->customer->nama_lengkap ?? 'N/A' }}<br>
-                                    <small class="text-muted">{{ $transaction->customer->email ?? 'N/A' }}</small>
+                                    <small style="opacity: 0.7;">{{ $transaction->customer->email ?? 'N/A' }}</small>
                                 </td>
-                                <td>{{ $transaction->created_at->format('d M Y H:i') }}</td>
+                                <td>
+                                    <small
+                                        style="opacity: 0.7;">{{ $transaction->created_at->format('d M Y H:i') }}</small>
+                                </td>
                                 <td><strong>Rp {{ number_format($transaction->total_amount, 0, ',', '.') }}</strong></td>
                                 <td>
                                     @php
@@ -166,10 +180,14 @@
                                             'failed' => 'danger',
                                             default => 'secondary',
                                         };
+                                        $paymentText = match ($transaction->payment_status) {
+                                            'paid' => 'Lunas',
+                                            'pending' => 'Menunggu',
+                                            'failed' => 'Gagal',
+                                            default => 'Unknown',
+                                        };
                                     @endphp
-                                    <span class="badge bg-{{ $paymentClass }}">
-                                        {{ ucfirst($transaction->payment_status) }}
-                                    </span>
+                                    <span class="badge bg-{{ $paymentClass }}">{{ $paymentText }}</span>
                                 </td>
                                 <td>
                                     @php
@@ -181,38 +199,67 @@
                                             'cancelled' => 'danger',
                                             default => 'secondary',
                                         };
+                                        $statusText = match ($transaction->status) {
+                                            'pending' => 'Menunggu',
+                                            'processing' => 'Diproses',
+                                            'shipped' => 'Dikirim',
+                                            'completed' => 'Selesai',
+                                            'cancelled' => 'Dibatalkan',
+                                            default => 'Unknown',
+                                        };
                                     @endphp
-                                    <span class="badge bg-{{ $statusClass }}">
-                                        {{ ucfirst($transaction->status) }}
-                                    </span>
+                                    <span class="badge bg-{{ $statusClass }}">{{ $statusText }}</span>
+                                </td>
+                                {{-- KOLOM APPROVED BY --}}
+                                <td>
+                                    @if ($transaction->approvedBy)
+                                        <small>
+                                            {{ $transaction->approvedBy->nama_lengkap }}<br>
+                                            <span class="badge bg-secondary">{{ $transaction->approvedBy->role }}</span>
+                                        </small>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
                                 </td>
                                 <td>
-                                    <div class="d-flex gap-2">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <!-- Lihat detail (modal) -->
                                         <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal"
                                             data-bs-target="#viewTransactionModal"
-                                            onclick="loadTransactionDetails({{ $transaction->id_transaksi }})">
+                                            onclick="loadTransactionDetails({{ $transaction->id_transaksi }})"
+                                            title="Lihat Detail">
                                             <ion-icon name="eye-outline"></ion-icon>
                                         </button>
 
+                                        <!-- Generate Invoice -->
+                                        <a href="{{ route('admin.transactions.invoice', $transaction->id_transaksi) }}"
+                                            class="btn btn-sm btn-dark" title="Download Invoice" target="_blank">
+                                            <ion-icon name="document-text-outline"></ion-icon>
+                                        </a>
+                                        <!-- Edit status pesanan -->
                                         <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
                                             data-bs-target="#editStatusModal"
-                                            onclick="openEditStatus({{ $transaction->id_transaksi }}, '{{ $transaction->status }}')">
+                                            onclick="openEditStatus({{ $transaction->id_transaksi }}, '{{ $transaction->status }}')"
+                                            title="Ubah Status">
                                             <ion-icon name="create-outline"></ion-icon>
                                         </button>
 
+                                        <!-- Tambah resi (jika belum dikirim/selesai) -->
                                         @if ($transaction->status != 'shipped' && $transaction->status != 'completed')
                                             <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal"
                                                 data-bs-target="#addResiModal"
-                                                onclick="openAddResi({{ $transaction->id_transaksi }})">
+                                                onclick="openAddResi({{ $transaction->id_transaksi }})"
+                                                title="Tambah Resi">
                                                 <ion-icon name="cube-outline"></ion-icon>
                                             </button>
                                         @endif
 
+                                        <!-- Verifikasi pembayaran (jika ada bukti & pending) -->
                                         @if ($transaction->payment_proof && $transaction->payment_status == 'pending')
                                             <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal"
                                                 data-bs-target="#verifyPaymentModal"
                                                 onclick="loadPaymentVerification({{ $transaction->id_transaksi }})"
-                                                title="Verify Payment">
+                                                title="Verifikasi Pembayaran">
                                                 <ion-icon name="card-outline"></ion-icon>
                                             </button>
                                         @endif
@@ -221,13 +268,17 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center py-4">No transactions found</td>
+                                <td colspan="8" class="text-center py-5">
+                                    <ion-icon name="receipt-outline" style="font-size: 64px; color: #ccc;"></ion-icon>
+                                    <p class="text-muted mt-2 mb-0">Belum ada transaksi</p>
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
 
+            <!-- Pagination -->
             @if ($transactions->hasPages())
                 <div class="mt-3">
                     {{ $transactions->links() }}
@@ -236,11 +287,13 @@
         </div>
     </div>
 
-    <!-- MODALS -->
+    <!-- Include Modals -->
     @include('admin.modals.transactions.view')
     @include('admin.modals.transactions.edit-status')
     @include('admin.modals.transactions.add-resi')
     @include('admin.modals.transactions.verify-payment')
+    @include('admin.modals.transactions.export')
+
 
     <!-- JAVASCRIPT -->
     <script>
@@ -431,7 +484,6 @@
                                 <td>${variantHTML.length > 0 ? variantHTML.join(' ') : '-'}</td>
                                 <td>${formatRupiah(item.harga)}</td>
                                 <td class="text-center">${item.qty || 0}</td>
-                                <td class="text-danger">${item.diskon ? '- ' + formatRupiah(item.diskon) : '-'}</td>
                                 <td class="text-end"><strong>${formatRupiah(subtotal)}</strong></td>
                             </tr>
                         `;
@@ -524,10 +576,6 @@
                         if (resiInput) resiInput.value = '';
                     });
             };
-
-            // ==========================================
-            // LOAD PAYMENT VERIFICATION
-            // ==========================================
             window.loadPaymentVerification = function(id) {
                 console.log('💳 Loading Payment Verification - ID:', id);
 
@@ -552,9 +600,6 @@
                     });
             };
 
-            // ==========================================
-            // POPULATE VERIFY PAYMENT MODAL
-            // ==========================================
             function populateVerifyModal(data) {
                 console.log('💳 Populating Verify Payment Modal');
                 console.log('   Transaction ID:', data.id_transaksi);
@@ -602,10 +647,6 @@
                     alert('Error: ' + error.message);
                 }
             }
-
-            // ==========================================
-            // SUBMIT STATUS UPDATE
-            // ==========================================
             window.submitStatusUpdate = function() {
                 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
                 console.log('📤 Submitting Status Update');
@@ -654,10 +695,6 @@
                         btn.innerHTML = '<ion-icon name="checkmark-outline"></ion-icon> Update Status';
                     });
             };
-
-            // ==========================================
-            // SUBMIT RESI UPDATE
-            // ==========================================
             window.submitResiUpdate = function() {
                 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
                 console.log('📤 Submitting Resi Update');
@@ -709,10 +746,6 @@
                         btn.innerHTML = '<ion-icon name="cube-outline"></ion-icon> Submit Resi';
                     });
             };
-
-            // ==========================================
-            // SUBMIT PAYMENT VERIFICATION
-            // ==========================================
             window.submitPaymentVerification = function() {
                 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
                 console.log('📤 Submitting Payment Verification');
@@ -781,29 +814,34 @@
                         btn.innerHTML = '<ion-icon name="checkmark-outline"></ion-icon> Submit Verification';
                     });
             };
-
-            // ==========================================
-            // EXPORT TRANSACTIONS
-            // ==========================================
             window.handleExport = function() {
                 console.log('📥 Exporting transactions...');
 
-                const status = new URLSearchParams(window.location.search).get('status') || '';
-                const paymentStatus = new URLSearchParams(window.location.search).get('payment_status') || '';
-                const search = new URLSearchParams(window.location.search).get('search') || '';
+                // Get selected export type
+                const exportType = document.querySelector('input[name="exportType"]:checked')?.value || 'csv';
+                console.log('   Export type:', exportType);
 
-                let exportUrl = `${BASE_URL}/export?`;
-                if (status) exportUrl += `status=${status}&`;
-                if (paymentStatus) exportUrl += `payment_status=${paymentStatus}&`;
-                if (search) exportUrl += `search=${search}`;
+                // Get current filters
+                const params = new URLSearchParams(window.location.search);
+                const status = params.get('status') || '';
+                const paymentStatus = params.get('payment_status') || '';
+                const search = params.get('search') || '';
+
+                // Build export URL
+                let exportUrl = `${BASE_URL}/export?type=${exportType}`;
+                if (status) exportUrl += `&status=${status}`;
+                if (paymentStatus) exportUrl += `&payment_status=${paymentStatus}`;
+                if (search) exportUrl += `&search=${encodeURIComponent(search)}`;
 
                 console.log('📍 Export URL:', exportUrl);
+
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
+                if (modal) modal.hide();
+
+                // Trigger download
                 window.location.href = exportUrl;
             };
-
-            // ==========================================
-            // EVENT LISTENERS
-            // ==========================================
             const verifyAction = document.getElementById('verifyAction');
             if (verifyAction) {
                 verifyAction.addEventListener('change', function() {
@@ -829,4 +867,48 @@
 
         })();
     </script>
+    <!-- Export Modal -->
+    <div class="modal fade" id="exportModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <ion-icon name="download-outline"></ion-icon> Export Transactions
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Export Format</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportType" id="exportCSV"
+                                value="csv" checked>
+                            <label class="form-check-label" for="exportCSV">
+                                <strong>CSV</strong> - Excel compatible spreadsheet
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportType" id="exportPDF"
+                                value="pdf">
+                            <label class="form-check-label" for="exportPDF">
+                                <strong>PDF</strong> - Printable document
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <ion-icon name="information-circle-outline"></ion-icon>
+                        <strong>Note:</strong> Export will include current filters (status, payment status, search).
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="handleExport()">
+                        <ion-icon name="download-outline"></ion-icon> Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection

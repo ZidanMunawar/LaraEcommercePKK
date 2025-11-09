@@ -8,50 +8,103 @@ use Illuminate\Http\Request;
 
 class SizeController extends Controller
 {
+    /**
+     * Menampilkan halaman daftar ukuran
+     * Ukuran produk seperti S, M, L, XL, dll
+     */
     public function index()
     {
-        $sizes = Size::all();
+        // Ambil semua data ukuran, urutkan dari yang terbaru
+        $sizes = Size::orderBy('created_at', 'desc')->get();
+
+        // Kirim ke view
         return view('admin.pages.master.sizes', compact('sizes'));
     }
 
+    /**
+     * Menyimpan ukuran baru ke database
+     * Input: ukuran (S, M, L, XL, dll)
+     */
     public function store(Request $request)
     {
+        // Validasi input
         $request->validate([
             'size' => 'required|string|max:20|unique:sizes,size',
+        ], [
+            'size.required' => 'Ukuran wajib diisi',
+            'size.unique' => 'Ukuran sudah ada, gunakan ukuran lain',
+            'size.max' => 'Ukuran maksimal 20 karakter',
         ]);
 
-        Size::create([
-            'size' => $request->size,
-        ]);
+        try {
+            // Simpan ukuran baru (ubah ke uppercase biar konsisten)
+            Size::create([
+                'size' => strtoupper($request->size),
+            ]);
 
-        return redirect()->route('admin.master.sizes')->with('success', 'Size added successfully.');
+            return redirect()->route('admin.master.sizes')
+                ->with('success', 'Ukuran berhasil ditambahkan!');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal menambahkan ukuran: ' . $e->getMessage());
+        }
     }
 
-    public function edit($id)
-    {
-        $size = Size::findOrFail($id);
-        return view('admin.modal.master.sizes.edit', compact('size'));
-    }
-
+    /**
+     * Update data ukuran yang sudah ada
+     * Bisa ganti nama ukuran
+     */
     public function update(Request $request, $id)
     {
+        // Validasi input (kecuali ID yang sedang diedit)
         $request->validate([
             'size' => 'required|string|max:20|unique:sizes,size,' . $id,
+        ], [
+            'size.required' => 'Ukuran wajib diisi',
+            'size.unique' => 'Ukuran sudah ada, gunakan ukuran lain',
+            'size.max' => 'Ukuran maksimal 20 karakter',
         ]);
 
-        $size = Size::findOrFail($id);
-        $size->update([
-            'size' => $request->size,
-        ]);
+        try {
+            // Cari ukuran berdasarkan ID
+            $size = Size::findOrFail($id);
 
-        return redirect()->route('admin.master.sizes')->with('success', 'Size updated successfully.');
+            // Update ukuran (ubah ke uppercase)
+            $size->update([
+                'size' => strtoupper($request->size),
+            ]);
+
+            return redirect()->route('admin.master.sizes')
+                ->with('success', 'Ukuran berhasil diperbarui!');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal memperbarui ukuran: ' . $e->getMessage());
+        }
     }
 
+    /**
+     * Hapus ukuran dari database
+     */
     public function destroy($id)
     {
-        $size = Size::findOrFail($id);
-        $size->delete();
+        try {
+            // Cari ukuran yang mau dihapus
+            $size = Size::findOrFail($id);
 
-        return redirect()->route('admin.master.sizes')->with('success', 'Size deleted successfully.');
+            // Simpan ukuran (buat pesan sukses)
+            $sizeName = $size->size;
+
+            // Hapus ukuran
+            $size->delete();
+
+            return redirect()->route('admin.master.sizes')
+                ->with('success', "Ukuran '{$sizeName}' berhasil dihapus!");
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal menghapus ukuran: ' . $e->getMessage());
+        }
     }
 }

@@ -90,6 +90,16 @@ class Produk extends Model
         }
         return 0;
     }
+    public function isInWishlist()
+    {
+        if (!auth()->guard('customer')->check()) {
+            return false;
+        }
+
+        return \App\Models\Wishlist::where('id_customers', auth()->guard('customer')->id())
+            ->where('id_produk', $this->id_produk)
+            ->exists();
+    }
 
 
     public function getStockStatusAttribute()

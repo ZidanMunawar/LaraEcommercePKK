@@ -1,58 +1,66 @@
-<!-- Add Category Modal -->
-<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+<!-- Modal Tambah Kategori -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <form action="{{ route('admin.master.categories.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
+
+                <!-- Header modal -->
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="addCategoryModalLabel">
-                        <ion-icon name="add-circle-outline" class="align-middle"></ion-icon> Add New Category
+                    <h5 class="modal-title">
+                        <ion-icon name="add-circle-outline" class="align-middle"></ion-icon>
+                        Tambah Kategori Baru
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
+
+                <!-- Body modal -->
                 <div class="modal-body">
-                    <!-- Category Name -->
+                    <!-- Nama Kategori -->
                     <div class="mb-3">
                         <label for="add_name" class="form-label">
-                            Category Name <span class="text-danger">*</span>
+                            Nama Kategori <span class="text-danger">*</span>
                         </label>
                         <input type="text" class="form-control @error('name') is-invalid @enderror" id="add_name"
-                            name="name" placeholder="Enter category name" value="{{ old('name') }}" required>
+                            name="name" placeholder="Contoh: Kaos, Kemeja, Celana" value="{{ old('name') }}"
+                            required>
                         @error('name')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <!-- Category Image -->
+                    <!-- Upload Gambar -->
                     <div class="mb-3">
                         <label for="add_image" class="form-label">
-                            Category Image <span class="text-muted">(Optional)</span>
+                            Gambar Kategori <span class="text-muted">(Opsional)</span>
                         </label>
                         <input type="file" class="form-control @error('image') is-invalid @enderror" id="add_image"
                             name="image" accept="image/*">
                         @error('image')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                        <small class="text-muted">Format: JPEG, PNG, JPG, GIF, SVG. Max 2MB.</small>
+                        <div class="form-text">
+                            <ion-icon name="information-circle-outline"></ion-icon>
+                            Format: JPEG, PNG, JPG, GIF, SVG. Maksimal 2MB
+                        </div>
                     </div>
 
-                    <!-- Image Preview -->
+                    <!-- Preview Gambar -->
                     <div class="mb-3" id="add_image_preview_container" style="display: none;">
-                        <label class="form-label">Image Preview</label>
-                        <div class="text-center">
-                            <img id="add_image_preview" src="" alt="Preview" class="img-fluid rounded border"
+                        <label class="form-label">Preview Gambar</label>
+                        <div class="text-center border rounded p-3">
+                            <img id="add_image_preview" src="" alt="Preview" class="img-fluid rounded"
                                 style="max-height: 200px;">
                             <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeAddImage()">
-                                <ion-icon name="trash"></ion-icon> Remove Image
+                                <ion-icon name="trash"></ion-icon> Hapus Gambar
                             </button>
                         </div>
                     </div>
 
-                    <!-- Audiences (Multi-Select) -->
+                    <!-- Pilih Audiens -->
                     <div class="mb-3">
                         <label class="form-label">
-                            Select Audiences <span class="text-muted">(Optional - Multiple Select)</span>
+                            Pilih Audiens Target <span class="text-muted">(Opsional - Bisa lebih dari satu)</span>
                         </label>
                         <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
                             @forelse($audiences as $audience)
@@ -65,37 +73,35 @@
                                     </label>
                                 </div>
                             @empty
-                                <p class="text-muted mb-0">No audiences available. Please create audiences first.</p>
+                                <p class="text-muted mb-0">
+                                    Belum ada audiens. Silakan buat audiens terlebih dahulu.
+                                </p>
                             @endforelse
                         </div>
-                        @error('audience_ids')
-                            <div class="text-danger mt-1">{{ $message }}</div>
-                        @enderror
-                        @error('audience_ids.*')
-                            <div class="text-danger mt-1">{{ $message }}</div>
-                        @enderror
                     </div>
 
-                    <!-- Select All / Deselect All -->
+                    <!-- Tombol Select/Deselect All -->
                     @if ($audiences->isNotEmpty())
                         <div class="mb-3">
                             <button type="button" class="btn btn-sm btn-outline-primary"
                                 onclick="selectAllAudiencesAdd()">
-                                <ion-icon name="checkmark-done-outline"></ion-icon> Select All
+                                <ion-icon name="checkmark-done-outline"></ion-icon> Pilih Semua
                             </button>
                             <button type="button" class="btn btn-sm btn-outline-secondary"
                                 onclick="deselectAllAudiencesAdd()">
-                                <ion-icon name="close-outline"></ion-icon> Deselect All
+                                <ion-icon name="close-outline"></ion-icon> Batal Pilih Semua
                             </button>
                         </div>
                     @endif
                 </div>
+
+                <!-- Footer modal -->
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <ion-icon name="close-outline"></ion-icon> Close
+                        <ion-icon name="close-outline"></ion-icon> Batal
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        <ion-icon name="save-outline"></ion-icon> Save Category
+                        <ion-icon name="save-outline"></ion-icon> Simpan Kategori
                     </button>
                 </div>
             </form>
@@ -103,9 +109,9 @@
     </div>
 </div>
 
-<!-- Scripts for Add Modal -->
+<!-- Script untuk modal add -->
 <script>
-    // Image preview
+    // Preview gambar saat dipilih
     document.getElementById('add_image').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
@@ -118,20 +124,20 @@
         }
     });
 
-    // Remove image preview
+    // Hapus preview gambar
     function removeAddImage() {
         document.getElementById('add_image').value = '';
         document.getElementById('add_image_preview').src = '';
         document.getElementById('add_image_preview_container').style.display = 'none';
     }
 
-    // Select all audiences
+    // Centang semua audiens
     function selectAllAudiencesAdd() {
         const checkboxes = document.querySelectorAll('#addCategoryModal input[name="audience_ids[]"]');
         checkboxes.forEach(cb => cb.checked = true);
     }
 
-    // Deselect all audiences
+    // Batal centang semua audiens
     function deselectAllAudiencesAdd() {
         const checkboxes = document.querySelectorAll('#addCategoryModal input[name="audience_ids[]"]');
         checkboxes.forEach(cb => cb.checked = false);

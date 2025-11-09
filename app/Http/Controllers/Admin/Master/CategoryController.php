@@ -12,98 +12,124 @@ use Illuminate\Support\Facades\Validator;
 class CategoryController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Menampilkan halaman daftar kategori
+     * Sekaligus ambil data audiences untuk modal
      */
     public function index()
     {
-        $categories = Category::with('audiences')->orderBy('created_at', 'desc')->get();
+        // Ambil semua kategori beserta relasi audiences-nya
+        $categories = Category::with('audiences')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Ambil semua audiences (untuk checkbox di modal)
         $audiences = Audience::orderBy('name', 'asc')->get();
+
+        // Kirim ke view
         return view('admin.pages.master.categories', compact('categories', 'audiences'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Menyimpan kategori baru ke database
+     * Termasuk upload gambar dan relasi audiences
      */
     public function store(Request $request)
     {
+        // Validasi input dari user
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:100|unique:categories,name',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'audience_ids' => 'nullable|array',
             'audience_ids.*' => 'exists:audiences,id',
         ], [
-            'name.required' => 'Nama kategori wajib diisi.',
-            'name.unique' => 'Nama kategori sudah digunakan.',
-            'name.max' => 'Nama kategori maksimal 100 karakter.',
-            'image.image' => 'File yang diupload harus berupa gambar.',
-            'image.mimes' => 'Format gambar harus jpeg, png, jpg, gif, atau svg.',
-            'image.max' => 'Ukuran gambar maksimal 2MB.',
-            'audience_ids.array' => 'Format audience tidak valid.',
-            'audience_ids.*.exists' => 'Audience tidak valid.',
+            // Pesan error dalam bahasa Indonesia
+            'name.required' => 'Nama kategori wajib diisi',
+            'name.unique' => 'Nama kategori sudah ada, gunakan nama lain',
+            'name.max' => 'Nama kategori maksimal 100 karakter',
+            'image.image' => 'File harus berupa gambar',
+            'image.mimes' => 'Format gambar: JPEG, PNG, JPG, GIF, SVG',
+            'image.max' => 'Ukuran gambar maksimal 2MB',
+            'audience_ids.array' => 'Format audiens tidak valid',
+            'audience_ids.*.exists' => 'Audiens tidak valid',
         ]);
 
+        // Kalau validasi gagal, redirect balik dengan error
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput()
-                ->with('error', $validator->errors()->first());
+                ->with('error', 'Mohon periksa kembali data yang diisi');
         }
 
         try {
+            // Data yang mau disimpan
             $data = [
                 'name' => $request->name,
             ];
 
-            // Upload image if exists
+            // Upload gambar kalau ada
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
+
+                // Generate nama file unik (biar ga bentrok)
                 $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
+
+                // Simpan ke folder storage/app/public/categories
                 $imagePath = $image->storeAs('categories', $imageName, 'public');
+
                 $data['image'] = $imagePath;
             }
 
+            // Simpan kategori ke database
             $category = Category::create($data);
 
-            // Sync audiences (many-to-many)
+            // Hubungkan kategori dengan audiences (many-to-many)
             if ($request->has('audience_ids') && is_array($request->audience_ids)) {
                 $category->audiences()->sync($request->audience_ids);
             }
 
+            // Redirect dengan pesan sukses
             return redirect()->route('admin.master.categories')
-                ->with('success', 'Category berhasil ditambahkan.');
+                ->with('success', 'Kategori berhasil ditambahkan!');
+
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            // Kalau ada error, tampilkan pesan error
+            return redirect()->back()
+                ->with('error', 'Gagal menambahkan kategori: ' . $e->getMessage());
         }
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update data kategori yang sudah ada
+     * Bisa ganti nama, gambar, dan audiences
      */
     public function update(Request $request, $id)
     {
+        // Cari kategori berdasarkan ID
         $category = Category::findOrFail($id);
 
+        // Validasi input (kecuali ID yang sedang diedit)
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:100|unique:categories,name,' . $id,
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'audience_ids' => 'nullable|array',
             'audience_ids.*' => 'exists:audiences,id',
         ], [
-            'name.required' => 'Nama kategori wajib diisi.',
-            'name.unique' => 'Nama kategori sudah digunakan.',
-            'name.max' => 'Nama kategori maksimal 100 karakter.',
-            'image.image' => 'File yang diupload harus berupa gambar.',
-            'image.mimes' => 'Format gambar harus jpeg, png, jpg, gif, atau svg.',
-            'image.max' => 'Ukuran gambar maksimal 2MB.',
-            'audience_ids.array' => 'Format audience tidak valid.',
-            'audience_ids.*.exists' => 'Audience tidak valid.',
+            'name.required' => 'Nama kategori wajib diisi',
+            'name.unique' => 'Nama kategori sudah ada, gunakan nama lain',
+            'name.max' => 'Nama kategori maksimal 100 karakter',
+            'image.image' => 'File harus berupa gambar',
+            'image.mimes' => 'Format gambar: JPEG, PNG, JPG, GIF, SVG',
+            'image.max' => 'Ukuran gambar maksimal 2MB',
+            'audience_ids.array' => 'Format audiens tidak valid',
+            'audience_ids.*.exists' => 'Audiens tidak valid',
         ]);
 
         if ($validator->fails()) {
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput()
-                ->with('error', $validator->errors()->first());
+                ->with('error', 'Mohon periksa kembali data yang diisi');
         }
 
         try {
@@ -111,57 +137,68 @@ class CategoryController extends Controller
                 'name' => $request->name,
             ];
 
-            // Check if new image is uploaded
+            // Kalau upload gambar baru
             if ($request->hasFile('image')) {
-                // Delete old image
+                // Hapus gambar lama kalau ada
                 if ($category->image && Storage::disk('public')->exists($category->image)) {
                     Storage::disk('public')->delete($category->image);
                 }
 
-                // Upload new image
+                // Upload gambar baru
                 $image = $request->file('image');
                 $imageName = time() . '_' . uniqid() . '.' . $image->getClientOriginalExtension();
                 $imagePath = $image->storeAs('categories', $imageName, 'public');
                 $data['image'] = $imagePath;
             }
 
+            // Update data kategori
             $category->update($data);
 
-            // Sync audiences (many-to-many)
+            // Update relasi audiences
             if ($request->has('audience_ids')) {
                 $category->audiences()->sync($request->audience_ids);
             } else {
-                // If no audiences selected, detach all
+                // Kalau ga ada yang dipilih, lepas semua relasi
                 $category->audiences()->detach();
             }
 
             return redirect()->route('admin.master.categories')
-                ->with('success', 'Category berhasil diperbarui.');
+                ->with('success', 'Kategori berhasil diperbarui!');
+
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Gagal memperbarui kategori: ' . $e->getMessage());
         }
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Hapus kategori dari database
+     * Termasuk hapus gambarnya dari storage
      */
     public function destroy($id)
     {
         try {
+            // Cari kategori yang mau dihapus
             $category = Category::findOrFail($id);
 
-            // Delete image from storage
+            // Simpan nama kategori (buat pesan sukses)
+            $categoryName = $category->name;
+
+            // Hapus gambar dari storage kalau ada
             if ($category->image && Storage::disk('public')->exists($category->image)) {
                 Storage::disk('public')->delete($category->image);
             }
 
-            // Delete category (audiences will be detached automatically by cascade)
+            // Hapus kategori dari database
+            // (relasi audiences akan otomatis kehapus karena cascade)
             $category->delete();
 
             return redirect()->route('admin.master.categories')
-                ->with('success', 'Category berhasil dihapus.');
+                ->with('success', "Kategori '{$categoryName}' berhasil dihapus!");
+
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Gagal menghapus kategori: ' . $e->getMessage());
         }
     }
 }
